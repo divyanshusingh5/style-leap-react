@@ -1,7 +1,8 @@
 import { ClaimData } from "@/types/claims";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Line, LineChart } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { ImprovedRegionalTrendsChart } from "@/components/charts/ImprovedRegionalTrendsChart";
 
 interface VenueTabProps {
   data: ClaimData[];
@@ -62,44 +63,6 @@ export function VenueTab({ data }: VenueTabProps) {
       .sort((a, b) => b.avgVariance - a.avgVariance);
   }, [data]);
 
-  const regionalTrends = useMemo(() => {
-    const monthly: { [key: string]: { [state: string]: { value: number; count: number } } } = {};
-    
-    data.forEach(claim => {
-      const month = claim.claim_date.substring(0, 7);
-      if (!monthly[month]) {
-        monthly[month] = {};
-      }
-      if (!monthly[month][claim.state]) {
-        monthly[month][claim.state] = { value: 0, count: 0 };
-      }
-      
-      if (selectedMetric === 'settlement') {
-        monthly[month][claim.state].value += claim.final_settlement;
-      } else if (selectedMetric === 'variance') {
-        monthly[month][claim.state].value += Math.abs(claim.variance_pct);
-      } else {
-        monthly[month][claim.state].value += 1;
-      }
-      monthly[month][claim.state].count += 1;
-    });
-
-    const states = [...new Set(data.map(d => d.state))].slice(0, 5);
-    
-    return Object.entries(monthly)
-      .map(([month, stateData]) => {
-        const result: any = { month };
-        states.forEach(state => {
-          if (stateData[state]) {
-            result[state] = selectedMetric === 'claims' 
-              ? stateData[state].value 
-              : stateData[state].value / stateData[state].count;
-          }
-        });
-        return result;
-      })
-      .sort((a, b) => a.month.localeCompare(b.month));
-  }, [data, selectedMetric]);
 
   const venueRiskHeatmap = useMemo(() => {
     const counties: { [key: string]: { variance: number; count: number; settlement: number } } = {};
@@ -189,66 +152,46 @@ export function VenueTab({ data }: VenueTabProps) {
       </div>
 
       <div className="bg-card rounded-xl p-6 border border-border shadow-md mb-6">
-        <h3 className="text-xl font-semibold mb-4">Regional Trends: Compare Regions Over Time</h3>
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <h3 className="text-xl font-semibold mb-4">Regional Trends: State Performance Analysis</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Track how different states perform over time across key metrics
+        </p>
+        <div className="flex gap-2 mb-6 flex-wrap">
           <button
             onClick={() => setSelectedMetric('settlement')}
             className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              "px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm",
               selectedMetric === 'settlement'
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary text-primary-foreground shadow-primary/20'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
-            Settlement
+            💰 Settlement Amount
           </button>
           <button
             onClick={() => setSelectedMetric('variance')}
             className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              "px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm",
               selectedMetric === 'variance'
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary text-primary-foreground shadow-primary/20'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
-            Variance
+            📊 Variance Rate
           </button>
           <button
             onClick={() => setSelectedMetric('claims')}
             className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              "px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm",
               selectedMetric === 'claims'
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary text-primary-foreground shadow-primary/20'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
-            Claims Volume
+            📈 Claims Volume
           </button>
         </div>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={regionalTrends}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-            <YAxis stroke="hsl(var(--muted-foreground))" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '0.5rem',
-              }}
-            />
-            <Legend />
-            {[...new Set(data.map(d => d.state))].slice(0, 5).map((state, idx) => (
-              <Line 
-                key={state} 
-                type="monotone" 
-                dataKey={state} 
-                stroke={`hsl(var(--chart-${(idx % 5) + 1}))`} 
-                strokeWidth={2} 
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+        <ImprovedRegionalTrendsChart data={data} metric={selectedMetric} />
       </div>
 
       <div className="bg-card rounded-xl p-6 border border-border shadow-md">

@@ -4,7 +4,7 @@ import { VarianceTrendChart } from "../charts/VarianceTrendChart";
 import { SeverityChart } from "../charts/SeverityChart";
 import { ActualVsPredictedChart } from "../charts/ActualVsPredictedChart";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, TrendingUp, Calendar, AlertTriangle } from "lucide-react";
+import { AlertCircle, TrendingUp, Calendar, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign } from "lucide-react";
 
 interface OverviewTabProps {
   data: ClaimData[];
@@ -44,6 +44,19 @@ export function OverviewTab({ data }: OverviewTabProps) {
   const lyHighVariancePct = lyData.length > 0 ? (lyHighVariance / lyData.length) * 100 : 0;
   const varianceChange = ((highVariancePct - lyHighVariancePct) / lyHighVariancePct) * 100;
   
+  // Overprediction and Underprediction KPIs
+  const overpredictedClaims = currentData.filter(d => d.predicted_pain_suffering > d.final_settlement).length;
+  const overpredictionPct = currentData.length > 0 ? (overpredictedClaims / currentData.length) * 100 : 0;
+  const lyOverpredicted = lyData.filter(d => d.predicted_pain_suffering > d.final_settlement).length;
+  const lyOverpredictionPct = lyData.length > 0 ? (lyOverpredicted / lyData.length) * 100 : 0;
+  const overpredictionChange = lyOverpredictionPct > 0 ? ((overpredictionPct - lyOverpredictionPct) / lyOverpredictionPct) * 100 : 0;
+  
+  const underpredictedClaims = currentData.filter(d => d.predicted_pain_suffering < d.final_settlement).length;
+  const underpredictionPct = currentData.length > 0 ? (underpredictedClaims / currentData.length) * 100 : 0;
+  const lyUnderpredicted = lyData.filter(d => d.predicted_pain_suffering < d.final_settlement).length;
+  const lyUnderpredictionPct = lyData.length > 0 ? (lyUnderpredicted / lyData.length) * 100 : 0;
+  const underpredictionChange = lyUnderpredictionPct > 0 ? ((underpredictionPct - lyUnderpredictionPct) / lyUnderpredictionPct) * 100 : 0;
+  
   // Priority claims table
   const priorityClaims = data
     .filter(d => Math.abs(d.variance_pct) > 25)
@@ -53,7 +66,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
   return (
     <div className="space-y-6">
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <KPICard
           title="Total Claims"
           value={totalClaims}
@@ -69,16 +82,15 @@ export function OverviewTab({ data }: OverviewTabProps) {
           change={{
             value: settlementChange,
             isPositive: settlementChange > 0,
-            isInverted: true,
           }}
-          icon={<AlertCircle className="h-5 w-5" />}
+          icon={<DollarSign className="h-5 w-5" />}
         />
         <KPICard
           title="Avg Days to Settle"
           value={Math.round(avgDays)}
           change={{
             value: daysChange,
-            isPositive: daysChange > 0,
+            isPositive: daysChange < 0,
             isInverted: true,
           }}
           icon={<Calendar className="h-5 w-5" />}
@@ -88,10 +100,30 @@ export function OverviewTab({ data }: OverviewTabProps) {
           value={`${highVariancePct.toFixed(1)}%`}
           change={{
             value: varianceChange,
-            isPositive: varianceChange > 0,
+            isPositive: varianceChange < 0,
             isInverted: true,
           }}
           icon={<AlertTriangle className="h-5 w-5" />}
+        />
+        <KPICard
+          title="Overprediction Rate"
+          value={`${overpredictionPct.toFixed(1)}%`}
+          change={{
+            value: overpredictionChange,
+            isPositive: overpredictionChange < 0,
+            isInverted: true,
+          }}
+          icon={<ArrowUpCircle className="h-5 w-5" />}
+        />
+        <KPICard
+          title="Underprediction Rate"
+          value={`${underpredictionPct.toFixed(1)}%`}
+          change={{
+            value: underpredictionChange,
+            isPositive: underpredictionChange < 0,
+            isInverted: true,
+          }}
+          icon={<ArrowDownCircle className="h-5 w-5" />}
         />
       </div>
 
