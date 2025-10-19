@@ -2,6 +2,11 @@ import { useState } from "react";
 import { Header } from "@/components/dashboard/Header";
 import { TabNavigation } from "@/components/dashboard/TabNavigation";
 import { OverviewTab } from "@/components/tabs/OverviewTab";
+import { RecommendationsTab } from "@/components/tabs/RecommendationsTab";
+import { AlignmentTab } from "@/components/tabs/AlignmentTab";
+import { InjuryTab } from "@/components/tabs/InjuryTab";
+import { AdjusterTab } from "@/components/tabs/AdjusterTab";
+import { VenueTab } from "@/components/tabs/VenueTab";
 import { useClaimsData } from "@/hooks/useClaimsData";
 import { TabType } from "@/types/claims";
 
@@ -16,46 +21,11 @@ const Index = () => {
       
       <main className="max-w-[1400px] mx-auto px-6 py-8">
         {activeTab === 'overview' && <OverviewTab data={filteredData} />}
-        {activeTab === 'recommendations' && (
-          <div className="bg-card rounded-xl p-8 border border-border shadow-md text-center">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Recommendations Tab
-            </h2>
-            <p className="text-muted-foreground">Coming soon: Variance features and adjuster recommendations</p>
-          </div>
-        )}
-        {activeTab === 'alignment' && (
-          <div className="bg-card rounded-xl p-8 border border-border shadow-md text-center">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Model Alignment Tab
-            </h2>
-            <p className="text-muted-foreground">Coming soon: Consensus vs Model alignment analysis</p>
-          </div>
-        )}
-        {activeTab === 'injury' && (
-          <div className="bg-card rounded-xl p-8 border border-border shadow-md text-center">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Injury Analysis Tab
-            </h2>
-            <p className="text-muted-foreground">Coming soon: Injury group analysis and trends</p>
-          </div>
-        )}
-        {activeTab === 'adjuster' && (
-          <div className="bg-card rounded-xl p-8 border border-border shadow-md text-center">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Adjuster Performance Tab
-            </h2>
-            <p className="text-muted-foreground">Coming soon: Adjuster performance metrics</p>
-          </div>
-        )}
-        {activeTab === 'venue' && (
-          <div className="bg-card rounded-xl p-8 border border-border shadow-md text-center">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Venue Analysis Tab
-            </h2>
-            <p className="text-muted-foreground">Coming soon: State and county venue analysis</p>
-          </div>
-        )}
+        {activeTab === 'recommendations' && <RecommendationsTab data={filteredData} />}
+        {activeTab === 'alignment' && <AlignmentTab data={filteredData} />}
+        {activeTab === 'injury' && <InjuryTab data={filteredData} />}
+        {activeTab === 'adjuster' && <AdjusterTab data={filteredData} />}
+        {activeTab === 'venue' && <VenueTab data={filteredData} />}
       </main>
     </div>
   );
