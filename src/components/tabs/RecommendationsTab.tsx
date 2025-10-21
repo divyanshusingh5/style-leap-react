@@ -1,7 +1,8 @@
 import { ClaimData } from "@/types/claims";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line, LineChart, CartesianGrid } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line, LineChart, CartesianGrid, Cell } from "recharts";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, TrendingUp, TrendingDown, Info } from "lucide-react";
 
 interface RecommendationsTabProps {
   data: ClaimData[];
@@ -57,27 +58,93 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
       .slice(0, 5);
   }, [data, selectedFeature]);
 
-  const countyPerformance = useMemo(() => {
-    const counties: { [key: string]: { variance: number; count: number; settlement: number } } = {};
+  const countyAnalysis = useMemo(() => {
+    const counties: { 
+      [key: string]: { 
+        signedVariance: number;
+        absVariance: number;
+        count: number;
+        settlement: number;
+        overpredicted: number;
+        underpredicted: number;
+        avgSeverity: number;
+        avgCaution: number;
+        liberalCount: number;
+        conservativeCount: number;
+      } 
+    } = {};
     
     data.forEach(claim => {
       if (!counties[claim.county]) {
-        counties[claim.county] = { variance: 0, count: 0, settlement: 0 };
+        counties[claim.county] = { 
+          signedVariance: 0, 
+          absVariance: 0,
+          count: 0, 
+          settlement: 0,
+          overpredicted: 0,
+          underpredicted: 0,
+          avgSeverity: 0,
+          avgCaution: 0,
+          liberalCount: 0,
+          conservativeCount: 0
+        };
       }
-      counties[claim.county].variance += Math.abs(claim.variance_pct);
+      
+      counties[claim.county].signedVariance += claim.variance_pct;
+      counties[claim.county].absVariance += Math.abs(claim.variance_pct);
       counties[claim.county].count += 1;
       counties[claim.county].settlement += claim.final_settlement;
+      counties[claim.county].avgSeverity += claim.severity;
+      counties[claim.county].avgCaution += claim.caution_score;
+      
+      if (claim.variance_pct > 0) {
+        counties[claim.county].underpredicted += 1;
+        if (claim.variance_pct > 15) counties[claim.county].liberalCount += 1;
+      } else {
+        counties[claim.county].overpredicted += 1;
+        if (claim.variance_pct < -15) counties[claim.county].conservativeCount += 1;
+      }
     });
 
     return Object.entries(counties)
-      .map(([name, { variance, count, settlement }]) => ({
-        name,
-        avgVariance: variance / count,
-        avgSettlement: settlement / count,
-        count
-      }))
-      .sort((a, b) => b.avgVariance - a.avgVariance);
+      .map(([name, stats]) => {
+        const avgSignedVariance = stats.signedVariance / stats.count;
+        const avgAbsVariance = stats.absVariance / stats.count;
+        const underpredictRate = (stats.underpredicted / stats.count) * 100;
+        
+        let tendency = 'Neutral';
+        let tendencyBadge: 'destructive' | 'success' | 'default' = 'default';
+        
+        if (avgSignedVariance > 10 && underpredictRate > 55) {
+          tendency = 'Liberal';
+          tendencyBadge = 'destructive';
+        } else if (avgSignedVariance < -10 && underpredictRate < 45) {
+          tendency = 'Conservative';
+          tendencyBadge = 'success';
+        }
+        
+        return {
+          name,
+          state: data.find(d => d.county === name)?.state || '',
+          avgSignedVariance,
+          avgAbsVariance,
+          avgSettlement: stats.settlement / stats.count,
+          avgSeverity: stats.avgSeverity / stats.count,
+          avgCaution: stats.avgCaution / stats.count,
+          count: stats.count,
+          underpredictRate,
+          tendency,
+          tendencyBadge,
+          liberalCount: stats.liberalCount,
+          conservativeCount: stats.conservativeCount
+        };
+      })
+      .sort((a, b) => b.avgAbsVariance - a.avgAbsVariance);
   }, [data]);
+
+  const highVarianceCounties = useMemo(() => {
+    return countyAnalysis.filter(c => c.avgAbsVariance > 20).slice(0, 10);
+  }, [countyAnalysis]);
 
   const temporalData = useMemo(() => {
     const monthly: { [key: string]: { variance: number; count: number } } = {};
@@ -172,22 +239,131 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
         </div>
       </div>
 
+      <div className="bg-warning/10 rounded-xl p-6 border border-warning/20 mb-6">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-warning mb-2">High Variance County Analysis</h3>
+            <p className="text-sm text-muted-foreground">
+              Counties marked as <span className="font-semibold text-destructive">Liberal</span> tend to award settlements significantly higher than predicted (underprediction). 
+              Counties marked as <span className="font-semibold text-success">Conservative</span> tend to award lower than predicted (overprediction). 
+              This analysis considers variance patterns, settlement amounts, severity, and caution scores across all claims.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-card rounded-xl p-6 border border-border shadow-md mb-6">
-        <h3 className="text-xl font-semibold mb-4">County Performance Insights</h3>
+        <h3 className="text-xl font-semibold mb-4">County Variance & Tendency Analysis</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-muted/50 border-b border-border">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold">County</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">State</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Tendency</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Avg Variance</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Underprediction Rate</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Avg Settlement</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Avg Severity</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Claims</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Insight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {highVarianceCounties.map((county) => (
+                <tr key={county.name} className="border-b border-border hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-3 text-sm font-medium">{county.name}</td>
+                  <td className="px-4 py-3 text-sm">{county.state}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <Badge variant={county.tendencyBadge}>
+                      {county.tendency === 'Liberal' && <TrendingUp className="h-3 w-3 mr-1 inline" />}
+                      {county.tendency === 'Conservative' && <TrendingDown className="h-3 w-3 mr-1 inline" />}
+                      {county.tendency}
+                    </Badge>
+                  </td>
+                  <td className={`px-4 py-3 text-sm font-semibold ${
+                    county.avgSignedVariance > 0 ? 'text-destructive' : 'text-success'
+                  }`}>
+                    {county.avgSignedVariance > 0 ? '+' : ''}{county.avgSignedVariance.toFixed(1)}%
+                  </td>
+                  <td className="px-4 py-3 text-sm">{county.underpredictRate.toFixed(1)}%</td>
+                  <td className="px-4 py-3 text-sm">${Math.round(county.avgSettlement).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm">{county.avgSeverity.toFixed(1)}</td>
+                  <td className="px-4 py-3 text-sm">{county.count}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="text-xs text-muted-foreground max-w-xs">
+                      {county.tendency === 'Liberal' && (
+                        <span>
+                          Model underpredicts by {Math.abs(county.avgSignedVariance).toFixed(1)}%. 
+                          Consider increasing predictions by {Math.round(Math.abs(county.avgSignedVariance) * 0.8)}% for this venue.
+                        </span>
+                      )}
+                      {county.tendency === 'Conservative' && (
+                        <span>
+                          Model overpredicts by {Math.abs(county.avgSignedVariance).toFixed(1)}%. 
+                          Consider reducing predictions by {Math.round(Math.abs(county.avgSignedVariance) * 0.8)}% for this venue.
+                        </span>
+                      )}
+                      {county.tendency === 'Neutral' && (
+                        <span>Variance is balanced. Monitor for emerging patterns.</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-xl p-6 border border-border shadow-md mb-6">
+        <h3 className="text-xl font-semibold mb-4">County Variance Distribution</h3>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={countyPerformance}>
+          <BarChart data={highVarianceCounties}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-            <YAxis stroke="hsl(var(--muted-foreground))" />
+            <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: 'Variance (%)', angle: -90, position: 'insideLeft' }} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '0.5rem',
               }}
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
+                      <p className="font-semibold mb-1">{data.name}, {data.state}</p>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Avg Variance: </span>
+                        <span className={data.avgSignedVariance > 0 ? 'text-destructive font-semibold' : 'text-success font-semibold'}>
+                          {data.avgSignedVariance > 0 ? '+' : ''}{data.avgSignedVariance.toFixed(1)}%
+                        </span>
+                      </p>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Tendency: </span>
+                        <span className="font-semibold">{data.tendency}</span>
+                      </p>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Claims: </span>
+                        <span>{data.count}</span>
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
             />
-            <Legend />
-            <Bar dataKey="avgVariance" name="Avg Variance (%)" fill="hsl(var(--chart-1))" />
+            <Bar dataKey="avgSignedVariance" name="Avg Signed Variance (%)">
+              {highVarianceCounties.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.avgSignedVariance > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--success))'} 
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
