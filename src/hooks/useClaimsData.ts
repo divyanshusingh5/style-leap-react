@@ -1,9 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ClaimData, FilterState } from '@/types/claims';
-import { generateDummyData } from '@/utils/generateData';
+import { loadCsvData } from '@/utils/loadCsvData';
 
 export function useClaimsData() {
-  const [allData] = useState<ClaimData[]>(() => generateDummyData());
+  const [allData, setAllData] = useState<ClaimData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    loadCsvData()
+      .then(data => {
+        setAllData(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load CSV data:', err);
+        setError('Failed to load data');
+        setIsLoading(false);
+      });
+  }, []);
   const [filters, setFilters] = useState<FilterState>({
     injuryGroup: 'all',
     county: 'all',
@@ -47,5 +62,5 @@ export function useClaimsData() {
     return uniqueCounties.sort();
   }, [allData]);
 
-  return { filteredData, filters, updateFilter, counties };
+  return { filteredData, filters, updateFilter, counties, isLoading, error };
 }

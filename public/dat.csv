@@ -1,0 +1,4 @@
+claim_id,claim_date,days_to_settlement,county,state,body_part,primary_injury,injury_group,severity,caution_score,venue_rating,impact_life,final_settlement,predicted_pain_suffering,variance_pct,adjuster
+CLM-1000,2024-03-15,45,Cook,IL,Spine,Whiplash,Group_NB,8,5,moderate,2,45000,42000,7.14,Sarah Williams
+CLM-1001,2024-06-22,62,Harris,TX,Neck,Fracture,Group_JFL,12,8,liberal,3,89000,75000,18.67,Mike Johnson
+CLM-1002,2023-11-08,38,King,WA,Leg,Sprain,Group_LEG,5,3,conservative,1,28000,32000,-12.5,Emily Chen

@@ -11,8 +11,33 @@ import { useClaimsData } from "@/hooks/useClaimsData";
 import { TabType } from "@/types/claims";
 
 const Index = () => {
-  const { filteredData, filters, updateFilter, counties } = useClaimsData();
+  const { filteredData, filters, updateFilter, counties, isLoading, error } = useClaimsData();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading claims data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <div className="text-center text-destructive">
+          <p className="text-lg font-semibold mb-2">Error loading data</p>
+          <p className="text-sm">{error}</p>
+          <p className="text-xs text-muted-foreground mt-4">
+            Make sure dat.csv is placed in the public folder
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
