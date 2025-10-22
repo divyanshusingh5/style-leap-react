@@ -1,52 +1,52 @@
-claim_id,claim_date,days_to_settlement,county,state,body_part,primary_injury,injury_group,severity,caution_score,venue_rating,impact_life,final_settlement,predicted_pain_suffering,variance_pct,adjuster
-CLM-1000,2024-03-15,45,Cook,IL,Spine,Whiplash,Group_NB,8,5,moderate,2,45000,42000,7.14,Sarah Williams
-CLM-1001,2024-06-22,62,Harris,TX,Neck,Fracture,Group_JFL,12,8,liberal,3,89000,75000,18.67,Mike Johnson
-CLM-1002,2023-11-08,38,King,WA,Leg,Sprain,Group_LEG,5,3,conservative,1,28000,32000,-12.5,Emily Chen
-CLM-1003,2025-01-14,55,Mecklenburg,NC,Spine,JFLE,Group_JFL,10,6,moderate,2,67000,58000,15.52,David Martinez
-CLM-1004,2024-09-03,72,Maricopa,AZ,Jaw,Tear,Group_HEAD,14,9,liberal,4,125000,95000,31.58,Lisa Anderson
-CLM-1005,2024-02-28,41,Miami-Dade,FL,Joint Left,Sprain,Group_JFL,6,4,conservative,1,32000,38000,-15.79,James Wilson
-CLM-1006,2025-03-19,58,Dallas,TX,Arm,Fracture,Group_ARM,9,5,moderate,2,52000,48000,8.33,Sarah Williams
-CLM-1007,2023-07-12,65,Orange,CA,Right,SSUE,Group_SSU,11,7,liberal,3,78000,62000,25.81,Mike Johnson
-CLM-1008,2024-11-25,48,Broward,FL,Leg,Contusion,Group_LEG,7,4,conservative,1,38000,42000,-9.52,Emily Chen
-CLM-1009,2025-02-08,51,Riverside,CA,Neck,Whiplash,Group_NB,8,6,moderate,2,48000,45000,6.67,David Martinez
-CLM-1010,2024-04-17,69,San Diego,CA,Spine,Fracture,Group_NB,13,8,liberal,4,112000,88000,27.27,Lisa Anderson
-CLM-1011,2023-12-03,44,Bexar,TX,Head,Contusion,Group_HEAD,6,3,conservative,2,35000,40000,-12.5,James Wilson
-CLM-1012,2025-04-22,59,Cook,IL,Arm,SSUE,Group_SSU,10,6,moderate,3,61000,54000,12.96,Sarah Williams
-CLM-1013,2024-07-08,76,Harris,TX,Joint Left,Tear,Group_JFL,12,9,liberal,4,98000,76000,28.95,Mike Johnson
-CLM-1014,2024-01-31,39,King,WA,Leg,Sprain,Group_LEG,5,2,conservative,1,26000,30000,-13.33,Emily Chen
-CLM-1015,2025-05-11,54,Mecklenburg,NC,Spine,Whiplash,Group_NB,9,5,moderate,2,55000,50000,10.0,David Martinez
-CLM-1016,2024-08-19,68,Maricopa,AZ,Jaw,Fracture,Group_HEAD,13,8,liberal,3,105000,82000,28.05,Lisa Anderson
-CLM-1017,2023-10-27,46,Miami-Dade,FL,Right,Sprain,Group_SSU,7,4,conservative,1,40000,45000,-11.11,James Wilson
-CLM-1018,2025-06-14,61,Dallas,TX,Neck,JFLE,Group_JFL,11,7,moderate,3,72000,63000,14.29,Sarah Williams
-CLM-1019,2024-05-02,73,Orange,CA,Leg,Contusion,Group_LEG,8,5,liberal,2,58000,48000,20.83,Mike Johnson
-CLM-1020,2024-12-08,42,Broward,FL,Arm,Tear,Group_ARM,6,3,conservative,1,34000,38000,-10.53,Emily Chen
-CLM-1021,2025-07-23,56,Riverside,CA,Spine,Fracture,Group_NB,10,6,moderate,2,65000,58000,12.07,David Martinez
-CLM-1022,2023-09-15,70,San Diego,CA,Head,Whiplash,Group_HEAD,12,8,liberal,4,95000,75000,26.67,Lisa Anderson
-CLM-1023,2024-03-28,47,Bexar,TX,Joint Left,SSUE,Group_JFL,7,4,conservative,2,42000,47000,-10.64,James Wilson
-CLM-1024,2025-08-05,63,Cook,IL,Leg,Sprain,Group_LEG,9,5,moderate,2,53000,48000,10.42,Sarah Williams
-CLM-1025,2024-06-11,77,Harris,TX,Neck,Tear,Group_NB,13,9,liberal,4,115000,90000,27.78,Mike Johnson
-CLM-1026,2023-11-19,40,King,WA,Arm,Contusion,Group_ARM,5,3,conservative,1,29000,33000,-12.12,Emily Chen
-CLM-1027,2025-01-09,57,Mecklenburg,NC,Spine,Fracture,Group_NB,11,7,moderate,3,70000,62000,12.9,David Martinez
-CLM-1028,2024-09-24,71,Maricopa,AZ,Jaw,JFLE,Group_HEAD,14,8,liberal,4,128000,98000,30.61,Lisa Anderson
-CLM-1029,2024-02-13,45,Miami-Dade,FL,Right,Sprain,Group_SSU,6,4,conservative,1,36000,41000,-12.2,James Wilson
-CLM-1030,2025-03-07,60,Dallas,TX,Leg,Whiplash,Group_LEG,10,6,moderate,2,62000,56000,10.71,Sarah Williams
-CLM-1031,2024-07-29,74,Orange,CA,Neck,Tear,Group_NB,12,8,liberal,3,102000,80000,27.5,Mike Johnson
-CLM-1032,2023-12-22,43,Broward,FL,Arm,SSUE,Group_SSU,7,4,conservative,1,39000,44000,-11.36,Emily Chen
-CLM-1033,2025-04-18,58,Riverside,CA,Spine,Fracture,Group_NB,10,6,moderate,2,66000,59000,11.86,David Martinez
-CLM-1034,2024-10-05,69,San Diego,CA,Head,Contusion,Group_HEAD,13,8,liberal,4,108000,85000,27.06,Lisa Anderson
-CLM-1035,2024-01-26,44,Bexar,TX,Joint Left,Sprain,Group_JFL,6,3,conservative,2,37000,42000,-11.9,James Wilson
-CLM-1036,2025-05-29,62,Cook,IL,Leg,JFLE,Group_LEG,11,7,moderate,3,73000,64000,14.06,Sarah Williams
-CLM-1037,2024-08-12,78,Harris,TX,Neck,Fracture,Group_NB,14,9,liberal,4,118000,92000,28.26,Mike Johnson
-CLM-1038,2023-10-01,41,King,WA,Arm,Tear,Group_ARM,5,2,conservative,1,27000,31000,-12.9,Emily Chen
-CLM-1039,2025-02-16,55,Mecklenburg,NC,Spine,Whiplash,Group_NB,9,5,moderate,2,56000,51000,9.8,David Martinez
-CLM-1040,2024-11-30,67,Maricopa,AZ,Jaw,SSUE,Group_HEAD,12,8,liberal,3,99000,78000,26.92,Lisa Anderson
-CLM-1041,2024-04-23,48,Miami-Dade,FL,Right,Contusion,Group_SSU,7,4,conservative,1,41000,46000,-10.87,James Wilson
-CLM-1042,2025-06-08,59,Dallas,TX,Leg,Sprain,Group_LEG,10,6,moderate,2,63000,57000,10.53,Sarah Williams
-CLM-1043,2024-05-15,75,Orange,CA,Neck,Tear,Group_NB,13,9,liberal,4,110000,86000,27.91,Mike Johnson
-CLM-1044,2024-12-19,46,Broward,FL,Arm,Fracture,Group_ARM,6,3,conservative,1,35000,39000,-10.26,Emily Chen
-CLM-1045,2025-07-31,61,Riverside,CA,Spine,JFLE,Group_JFL,11,7,moderate,3,71000,63000,12.7,David Martinez
-CLM-1046,2023-09-07,72,San Diego,CA,Head,Whiplash,Group_HEAD,14,8,liberal,4,122000,95000,28.42,Lisa Anderson
-CLM-1047,2024-03-11,42,Bexar,TX,Joint Left,SSUE,Group_JFL,6,4,conservative,2,38000,43000,-11.63,James Wilson
-CLM-1048,2025-08-21,64,Cook,IL,Leg,Contusion,Group_LEG,10,6,moderate,2,64000,58000,10.34,Sarah Williams
-CLM-1049,2024-06-03,79,Harris,TX,Neck,Fracture,Group_NB,13,9,liberal,4,120000,93000,29.03,Mike Johnson
-CLM-1050,2023-11-28,39,King,WA,Arm,Sprain,Group_ARM,5,3,conservative,1,28000,32000,-12.5,Emily Chen
+claim_id,claim_date,days_to_settlement,county,state,body_part,primary_injury,injury_group,severity,caution_score,venue_rating,impact_life,final_settlement,predicted_pain_suffering,variance_pct,adjuster,causation_probability,causation_tx_delay,causation_tx_gaps,causation_compliance,severity_allowed_tx_period,severity_initial_tx,severity_injections,severity_objective_findings,severity_pain_mgmt,severity_type_tx,severity_injury_site,severity_code
+CLM-1000,2024-03-15,45,Cook,IL,Spine,Whiplash,Group_NB,8,5,moderate,2,45000,42000,7.14,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1001,2024-06-22,62,Harris,TX,Neck,Fracture,Group_JFL,12,8,liberal,3,89000,75000,18.67,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1002,2023-11-08,38,King,WA,Leg,Sprain,Group_LEG,5,3,conservative,1,28000,32000,-12.5,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1003,2025-01-14,55,Mecklenburg,NC,Spine,JFLE,Group_JFL,10,6,moderate,2,67000,58000,15.52,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1004,2024-09-03,72,Maricopa,AZ,Jaw,Tear,Group_HEAD,14,9,liberal,4,125000,95000,31.58,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1005,2024-02-28,41,Miami-Dade,FL,Joint Left,Sprain,Group_JFL,6,4,conservative,1,32000,38000,-15.79,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.0000
+CLM-1006,2025-03-19,58,Dallas,TX,Arm,Fracture,Group_ARM,9,5,moderate,2,52000,48000,8.33,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1007,2023-07-12,65,Orange,CA,Right,SSUE,Group_SSU,11,7,liberal,3,78000,62000,25.81,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1008,2024-11-25,48,Broward,FL,Leg,Contusion,Group_LEG,7,4,conservative,1,38000,42000,-9.52,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.9862,0.3803
+CLM-1009,2025-02-10,52,Riverside,CA,Spine,Whiplash,Group_NB,9,6,moderate,2,58000,54000,7.41,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1010,2024-08-17,68,San Diego,CA,Neck,Fracture,Group_JFL,13,8,liberal,3,95000,78000,21.79,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1011,2023-12-03,43,Bexar,TX,Jaw,JFLE,Group_HEAD,6,4,conservative,1,35000,40000,-12.5,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1012,2024-04-20,56,Cook,IL,Joint Left,Tear,Group_JFL,10,7,moderate,2,62000,56000,10.71,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1013,2025-05-08,71,Harris,TX,Right,Sprain,Group_SSU,12,8,liberal,3,88000,72000,22.22,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1014,2024-01-15,39,King,WA,Leg,Contusion,Group_LEG,5,3,conservative,1,29000,33000,-12.12,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1015,2023-09-22,54,Mecklenburg,NC,Arm,Whiplash,Group_ARM,8,5,moderate,2,48000,45000,6.67,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1016,2024-07-11,69,Maricopa,AZ,Spine,Fracture,Group_NB,13,9,liberal,4,118000,91000,29.67,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1017,2025-01-28,42,Miami-Dade,FL,Neck,JFLE,Group_JFL,6,4,conservative,1,33000,39000,-15.38,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.0000
+CLM-1018,2024-10-05,57,Dallas,TX,Jaw,SSUE,Group_HEAD,10,6,moderate,2,64000,58000,10.34,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1019,2023-06-18,70,Orange,CA,Joint Left,Sprain,Group_JFL,12,8,liberal,3,92000,74000,24.32,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1020,2024-03-29,40,Broward,FL,Right,Tear,Group_SSU,5,3,conservative,1,30000,34000,-11.76,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1021,2025-04-16,55,Riverside,CA,Leg,Contusion,Group_LEG,9,5,moderate,2,56000,52000,7.69,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1022,2024-12-08,72,San Diego,CA,Arm,Whiplash,Group_ARM,14,9,liberal,4,128000,96000,33.33,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1023,2023-11-21,44,Bexar,TX,Spine,Fracture,Group_NB,7,4,conservative,1,38000,43000,-11.63,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.9862,0.3803
+CLM-1024,2024-05-14,59,Cook,IL,Neck,JFLE,Group_JFL,11,7,moderate,2,68000,61000,11.48,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1025,2025-06-02,73,Harris,TX,Jaw,Tear,Group_HEAD,13,8,liberal,3,102000,81000,25.93,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1026,2024-02-19,41,King,WA,Joint Left,Sprain,Group_JFL,6,3,conservative,1,31000,36000,-13.89,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1027,2023-08-07,56,Mecklenburg,NC,Right,Contusion,Group_SSU,9,6,moderate,2,54000,50000,8.00,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1028,2024-11-13,71,Maricopa,AZ,Leg,SSUE,Group_LEG,13,9,liberal,4,122000,93000,31.18,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1029,2025-03-01,43,Miami-Dade,FL,Arm,Whiplash,Group_ARM,6,4,conservative,1,34000,40000,-15.00,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.0000
+CLM-1030,2024-06-26,58,Dallas,TX,Spine,Fracture,Group_NB,10,6,moderate,2,61000,56000,8.93,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1031,2023-04-12,72,Orange,CA,Neck,JFLE,Group_JFL,12,8,liberal,3,96000,77000,24.68,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1032,2024-09-20,42,Broward,FL,Jaw,Tear,Group_HEAD,5,3,conservative,1,32000,37000,-13.51,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1033,2025-05-18,57,Riverside,CA,Joint Left,Sprain,Group_JFL,9,5,moderate,2,57000,53000,7.55,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1034,2024-01-03,73,San Diego,CA,Right,Contusion,Group_SSU,14,9,liberal,4,130000,97000,34.02,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1035,2023-10-15,44,Bexar,TX,Leg,SSUE,Group_LEG,7,4,conservative,1,39000,44000,-11.36,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.9862,0.3803
+CLM-1036,2024-07-28,60,Cook,IL,Arm,Whiplash,Group_ARM,11,7,moderate,2,70000,62000,12.90,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1037,2025-02-22,74,Harris,TX,Spine,Fracture,Group_NB,13,8,liberal,3,108000,84000,28.57,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1038,2024-04-06,43,King,WA,Neck,JFLE,Group_JFL,6,3,conservative,1,33000,38000,-13.16,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1039,2023-12-19,58,Mecklenburg,NC,Jaw,Tear,Group_HEAD,10,6,moderate,2,63000,57000,10.53,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1040,2024-08-31,73,Maricopa,AZ,Joint Left,Sprain,Group_JFL,13,9,liberal,4,124000,94000,31.91,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1041,2025-01-12,44,Miami-Dade,FL,Right,Contusion,Group_SSU,6,4,conservative,1,35000,41000,-14.63,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.0000
+CLM-1042,2024-05-24,59,Dallas,TX,Leg,SSUE,Group_LEG,10,6,moderate,2,59000,55000,7.27,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1043,2023-03-08,74,Orange,CA,Arm,Whiplash,Group_ARM,12,8,liberal,3,98000,79000,24.05,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1044,2024-10-17,43,Broward,FL,Spine,Fracture,Group_NB,5,3,conservative,1,33000,38000,-13.16,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.9862,0.3803
+CLM-1045,2025-06-09,58,Riverside,CA,Neck,JFLE,Group_JFL,9,5,moderate,2,58000,54000,7.41,David Martinez,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,1.1767,0.4864
+CLM-1046,2024-02-15,74,San Diego,CA,Jaw,Tear,Group_HEAD,14,9,liberal,4,132000,98000,34.69,Lisa Anderson,0.4478,0.1226,0.1313,0.0864,3.8533,1.5445,3.4370,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1047,2023-09-01,45,Bexar,TX,Joint Left,Sprain,Group_JFL,7,4,conservative,1,40000,45000,-11.11,James Wilson,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
+CLM-1048,2024-06-14,60,Cook,IL,Right,Contusion,Group_SSU,11,7,moderate,2,71000,63000,12.70,Sarah Williams,0.3257,0.1226,0.1313,0.1474,2.3490,1.2406,1.9855,2.7611,0.6396,2.0592,0.9862,0.4864
+CLM-1049,2025-03-27,75,Harris,TX,Leg,SSUE,Group_LEG,13,8,liberal,3,110000,85000,29.41,Mike Johnson,0.4478,0.1226,0.1313,0.0864,3.1606,1.5445,3.0855,2.7611,1.1258,3.2501,1.8450,0.8746
+CLM-1050,2024-11-09,44,King,WA,Arm,Whiplash,Group_ARM,6,3,conservative,1,34000,39000,-12.82,Emily Chen,0.2212,0.0000,0.0000,0.1474,1.4488,0.6738,0.0000,0.0000,0.0000,2.0592,0.4866,0.3803
