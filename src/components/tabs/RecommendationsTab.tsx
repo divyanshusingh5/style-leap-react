@@ -1,62 +1,293 @@
 import { ClaimData } from "@/types/claims";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line, LineChart, CartesianGrid, Cell } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line, LineChart, CartesianGrid, Cell, ScatterChart, Scatter, ZAxis } from "recharts";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, TrendingUp, TrendingDown, Info } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, TrendingUp, TrendingDown, Info, CheckCircle2, XCircle, Target, Users, Activity, BarChart3 } from "lucide-react";
 
 interface RecommendationsTabProps {
   data: ClaimData[];
 }
 
 export function RecommendationsTab({ data }: RecommendationsTabProps) {
-  const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+  const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
 
-  const varianceFeatures = useMemo(() => {
-    const features: { [key: string]: { variance: number; count: number } } = {};
+  // ===== EXECUTIVE SUMMARY CALCULATIONS =====
+  const executiveSummary = useMemo(() => {
+    const totalClaims = data.length;
+    const avgVariance = data.reduce((sum, c) => sum + Math.abs(c.variance_pct), 0) / totalClaims;
+    const highVarianceClaims = data.filter(c => Math.abs(c.variance_pct) > 30).length;
+    const modelAccuracy = ((totalClaims - highVarianceClaims) / totalClaims) * 100;
     
+    const varianceByFactor = {
+      injuryGroup: {} as Record<string, number[]>,
+      severity: {} as Record<string, number[]>,
+      county: {} as Record<string, number[]>,
+      venueRating: {} as Record<string, number[]>,
+      impactLife: {} as Record<string, number[]>
+    };
+
     data.forEach(claim => {
-      const key = claim.injury_group;
-      if (!features[key]) {
-        features[key] = { variance: 0, count: 0 };
-      }
-      features[key].variance += Math.abs(claim.variance_pct);
-      features[key].count += 1;
+      const abs = Math.abs(claim.variance_pct);
+      if (!varianceByFactor.injuryGroup[claim.injury_group]) varianceByFactor.injuryGroup[claim.injury_group] = [];
+      varianceByFactor.injuryGroup[claim.injury_group].push(abs);
+      
+      const sevBucket = claim.severity <= 5 ? 'Low' : claim.severity <= 10 ? 'Medium' : 'High';
+      if (!varianceByFactor.severity[sevBucket]) varianceByFactor.severity[sevBucket] = [];
+      varianceByFactor.severity[sevBucket].push(abs);
+      
+      if (!varianceByFactor.county[claim.county]) varianceByFactor.county[claim.county] = [];
+      varianceByFactor.county[claim.county].push(abs);
+      
+      if (!varianceByFactor.venueRating[claim.venue_rating]) varianceByFactor.venueRating[claim.venue_rating] = [];
+      varianceByFactor.venueRating[claim.venue_rating].push(abs);
+      
+      const impactKey = `Impact-${claim.impact_life}`;
+      if (!varianceByFactor.impactLife[impactKey]) varianceByFactor.impactLife[impactKey] = [];
+      varianceByFactor.impactLife[impactKey].push(abs);
     });
 
-    return Object.entries(features)
-      .map(([name, { variance, count }]) => ({
-        name,
-        avgVariance: variance / count,
-        count
+    const topDrivers = Object.entries(varianceByFactor).flatMap(([factorType, values]) => 
+      Object.entries(values).map(([key, variances]) => ({
+        factor: factorType,
+        value: key,
+        avgVariance: variances.reduce((a, b) => a + b, 0) / variances.length,
+        count: variances.length
       }))
-      .sort((a, b) => b.avgVariance - a.avgVariance)
-      .slice(0, 5);
+    ).sort((a, b) => b.avgVariance - a.avgVariance).slice(0, 5);
+
+    return { totalClaims, avgVariance, highVarianceClaims, modelAccuracy, topDrivers };
   }, [data]);
 
-  const recommendedAdjusters = useMemo(() => {
-    if (!selectedFeature) return [];
-
-    const adjusterStats: { [key: string]: { variance: number; count: number } } = {};
+  // ===== MULTI-INJURY CLAIM ANALYSIS =====
+  const multiInjuryAnalysis = useMemo(() => {
+    // Detect multi-injury claims by checking if multiple body parts or complex injury descriptions
+    const singleInjury: number[] = [];
+    const multiInjury: number[] = [];
+    const singleInjurySettlements: number[] = [];
+    const multiInjurySettlements: number[] = [];
     
-    data
-      .filter(claim => claim.injury_group === selectedFeature)
-      .forEach(claim => {
-        if (!adjusterStats[claim.adjuster]) {
-          adjusterStats[claim.adjuster] = { variance: 0, count: 0 };
-        }
-        adjusterStats[claim.adjuster].variance += Math.abs(claim.variance_pct);
-        adjusterStats[claim.adjuster].count += 1;
-      });
+    data.forEach(claim => {
+      const absVariance = Math.abs(claim.variance_pct);
+      // Heuristic: if body_part contains comma, slash, "and", or "multiple" it's multi-injury
+      const bodyPartLower = claim.body_part.toLowerCase();
+      const isMulti = bodyPartLower.includes(',') || 
+                      bodyPartLower.includes('/') || 
+                      bodyPartLower.includes(' and ') ||
+                      bodyPartLower.includes('multiple') ||
+                      claim.impact_life >= 4; // High impact often indicates multiple injuries
+      
+      if (isMulti) {
+        multiInjury.push(absVariance);
+        multiInjurySettlements.push(claim.final_settlement);
+      } else {
+        singleInjury.push(absVariance);
+        singleInjurySettlements.push(claim.final_settlement);
+      }
+    });
+
+    const singleAvg = singleInjury.reduce((a, b) => a + b, 0) / singleInjury.length;
+    const multiAvg = multiInjury.reduce((a, b) => a + b, 0) / multiInjury.length;
+    const singleSettlementAvg = singleInjurySettlements.reduce((a, b) => a + b, 0) / singleInjurySettlements.length;
+    const multiSettlementAvg = multiInjurySettlements.reduce((a, b) => a + b, 0) / multiInjurySettlements.length;
+
+    const varianceDiff = ((multiAvg - singleAvg) / singleAvg) * 100;
+    
+    return {
+      singleCount: singleInjury.length,
+      multiCount: multiInjury.length,
+      singleAvgVariance: singleAvg,
+      multiAvgVariance: multiAvg,
+      singleAvgSettlement: singleSettlementAvg,
+      multiAvgSettlement: multiSettlementAvg,
+      varianceDifferential: varianceDiff,
+      pattern: varianceDiff > 15 ? 'Multi-injury claims show significantly higher variance' :
+               varianceDiff < -15 ? 'Single-injury claims show higher variance' :
+               'No significant pattern difference'
+    };
+  }, [data]);
+
+  // ===== FACTOR COMBINATION ANALYSIS =====
+  const factorCombinations = useMemo(() => {
+    const combos: Record<string, {
+      claims: ClaimData[];
+      variance: number[];
+      key: string;
+      injuryGroup: string;
+      severityBucket: string;
+      venueRating: string;
+      impactLife: number;
+      factors: Record<string, any>;
+    }> = {};
+
+    data.forEach(claim => {
+      const sevBucket = claim.severity <= 5 ? 'Low-Sev' : claim.severity <= 10 ? 'Mid-Sev' : 'High-Sev';
+      const comboKey = `${claim.injury_group}|${sevBucket}|${claim.venue_rating}|Impact-${claim.impact_life}`;
+      
+      if (!combos[comboKey]) {
+        combos[comboKey] = {
+          claims: [],
+          variance: [],
+          key: comboKey,
+          injuryGroup: claim.injury_group,
+          severityBucket: sevBucket,
+          venueRating: claim.venue_rating,
+          impactLife: claim.impact_life,
+          factors: {
+            injury_group: claim.injury_group,
+            severity: sevBucket,
+            venue_rating: claim.venue_rating,
+            impact_life: claim.impact_life
+          }
+        };
+      }
+      
+      combos[comboKey].claims.push(claim);
+      combos[comboKey].variance.push(Math.abs(claim.variance_pct));
+    });
+
+    return Object.values(combos)
+      .filter(combo => combo.claims.length >= 3) // Only meaningful combinations
+      .map(combo => {
+        const avgVariance = combo.variance.reduce((a, b) => a + b, 0) / combo.variance.length;
+        const avgSettlement = combo.claims.reduce((sum, c) => sum + c.final_settlement, 0) / combo.claims.length;
+        const avgSeverity = combo.claims.reduce((sum, c) => sum + c.severity, 0) / combo.claims.length;
+        
+        // Factor impact analysis for this combination
+        const countyVariance: Record<string, number[]> = {};
+        const adjusterVariance: Record<string, number[]> = {};
+        
+        combo.claims.forEach(c => {
+          if (!countyVariance[c.county]) countyVariance[c.county] = [];
+          countyVariance[c.county].push(Math.abs(c.variance_pct));
+          
+          if (!adjusterVariance[c.adjuster]) adjusterVariance[c.adjuster] = [];
+          adjusterVariance[c.adjuster].push(Math.abs(c.variance_pct));
+        });
+
+        const topCountyDriver = Object.entries(countyVariance)
+          .map(([k, v]) => ({ name: k, avg: v.reduce((a, b) => a + b) / v.length }))
+          .sort((a, b) => b.avg - a.avg)[0];
+
+        const topAdjusterDriver = Object.entries(adjusterVariance)
+          .map(([k, v]) => ({ name: k, avg: v.reduce((a, b) => a + b) / v.length, count: v.length }))
+          .sort((a, b) => b.avg - a.avg)[0];
+
+        return {
+          ...combo,
+          avgVariance,
+          avgSettlement,
+          avgSeverity,
+          count: combo.claims.length,
+          topCountyDriver,
+          topAdjusterDriver,
+          displayName: `${combo.injuryGroup} + ${combo.severityBucket} + ${combo.venueRating}`
+        };
+      })
+      .sort((a, b) => b.avgVariance - a.avgVariance);
+  }, [data]);
+
+  const topProblemCombos = useMemo(() => factorCombinations.slice(0, 10), [factorCombinations]);
+  const wellPerformingCombos = useMemo(() => 
+    factorCombinations.filter(c => c.avgVariance < 15).slice(0, 5),
+    [factorCombinations]
+  );
+
+  // ===== ADJUSTER RECOMMENDATIONS WITH REASONING =====
+  const adjusterRecommendations = useMemo(() => {
+    const adjusterStats: Record<string, {
+      totalClaims: number;
+      avgVariance: number;
+      variances: number[];
+      settlements: number[];
+      severities: number[];
+      handledCombos: Set<string>;
+      performanceByCombo: Record<string, { variance: number[]; count: number }>;
+    }> = {};
+
+    data.forEach(claim => {
+      const sevBucket = claim.severity <= 5 ? 'Low-Sev' : claim.severity <= 10 ? 'Mid-Sev' : 'High-Sev';
+      const comboKey = `${claim.injury_group}|${sevBucket}`;
+      
+      if (!adjusterStats[claim.adjuster]) {
+        adjusterStats[claim.adjuster] = {
+          totalClaims: 0,
+          avgVariance: 0,
+          variances: [],
+          settlements: [],
+          severities: [],
+          handledCombos: new Set(),
+          performanceByCombo: {}
+        };
+      }
+      
+      const stats = adjusterStats[claim.adjuster];
+      stats.totalClaims++;
+      stats.variances.push(Math.abs(claim.variance_pct));
+      stats.settlements.push(claim.final_settlement);
+      stats.severities.push(claim.severity);
+      stats.handledCombos.add(comboKey);
+      
+      if (!stats.performanceByCombo[comboKey]) {
+        stats.performanceByCombo[comboKey] = { variance: [], count: 0 };
+      }
+      stats.performanceByCombo[comboKey].variance.push(Math.abs(claim.variance_pct));
+      stats.performanceByCombo[comboKey].count++;
+    });
 
     return Object.entries(adjusterStats)
-      .map(([name, { variance, count }]) => ({
-        name,
-        avgVariance: variance / count,
-        count
-      }))
-      .sort((a, b) => a.avgVariance - b.avgVariance)
-      .slice(0, 5);
-  }, [data, selectedFeature]);
+      .map(([name, stats]) => {
+        const avgVariance = stats.variances.reduce((a, b) => a + b, 0) / stats.variances.length;
+        const consistency = 1 - (Math.sqrt(stats.variances.reduce((sum, v) => sum + Math.pow(v - avgVariance, 2), 0) / stats.variances.length) / avgVariance);
+        const avgSettlement = stats.settlements.reduce((a, b) => a + b, 0) / stats.settlements.length;
+        const avgSeverity = stats.severities.reduce((a, b) => a + b, 0) / stats.severities.length;
+        
+        // Experience diversity score
+        const diversityScore = stats.handledCombos.size / stats.totalClaims;
+        
+        // Best performing combo
+        const bestCombo = Object.entries(stats.performanceByCombo)
+          .filter(([_, perf]) => perf.count >= 2)
+          .map(([combo, perf]) => ({
+            combo,
+            avgVar: perf.variance.reduce((a, b) => a + b) / perf.count,
+            count: perf.count
+          }))
+          .sort((a, b) => a.avgVar - b.avgVar)[0];
+
+        // Calculate calibration score (0-100)
+        const calibrationScore = Math.max(0, Math.min(100, 
+          ((100 - avgVariance) * 0.4) +  // Low variance = good
+          (consistency * 100 * 0.3) +     // Consistency = good
+          (Math.min(stats.totalClaims / 20, 1) * 100 * 0.2) + // Experience = good
+          (diversityScore * 100 * 0.1)    // Diversity = good
+        ));
+
+        return {
+          name,
+          totalClaims: stats.totalClaims,
+          avgVariance,
+          consistency,
+          avgSettlement,
+          avgSeverity,
+          diversityScore,
+          bestCombo,
+          calibrationScore,
+          recommendation: calibrationScore > 70 ? 'Excellent for recalibration' :
+                         calibrationScore > 50 ? 'Good for specific segments' :
+                         'Not recommended for recalibration'
+        };
+      })
+      .sort((a, b) => b.calibrationScore - a.calibrationScore);
+  }, [data]);
+
+  const recommendedForCalibration = useMemo(() => 
+    adjusterRecommendations.filter(a => a.calibrationScore > 60 && a.totalClaims >= 10).slice(0, 8),
+    [adjusterRecommendations]
+  );
+
+  // ===== COUNTY VARIANCE ANALYSIS =====
+
 
   const countyAnalysis = useMemo(() => {
     const counties: { 
@@ -167,226 +398,385 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
   }, [data]);
 
   return (
-    <>
-      <div className="bg-info/10 rounded-xl p-6 border border-info/20 mb-6">
-        <h3 className="font-semibold text-info mb-2">High Variance Feature Detection</h3>
-        <p className="text-sm text-muted-foreground">
-          Features with highest variance indicate areas where the model struggles most. Click on any feature to see recommended adjusters.
-        </p>
-      </div>
+    <div className="space-y-6">
+      {/* ===== 1. EXECUTIVE SUMMARY ===== */}
+      <Card className="border-primary/20 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <BarChart3 className="h-6 w-6 text-primary" />
+            Executive Summary
+          </CardTitle>
+          <CardDescription>High-level model performance overview and key insights</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <div className="text-sm text-muted-foreground mb-1">Total Claims</div>
+              <div className="text-2xl font-bold">{executiveSummary.totalClaims.toLocaleString()}</div>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <div className="text-sm text-muted-foreground mb-1">Avg Variance</div>
+              <div className="text-2xl font-bold text-warning">{executiveSummary.avgVariance.toFixed(1)}%</div>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <div className="text-sm text-muted-foreground mb-1">Model Accuracy</div>
+              <div className="text-2xl font-bold text-success">{executiveSummary.modelAccuracy.toFixed(1)}%</div>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <div className="text-sm text-muted-foreground mb-1">High Variance Claims</div>
+              <div className="text-2xl font-bold text-destructive">{executiveSummary.highVarianceClaims}</div>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-card rounded-xl p-6 border border-border shadow-md">
-          <h3 className="text-xl font-semibold mb-4">Top Variance Features</h3>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {varianceFeatures.map((feature) => (
-              <div
-                key={feature.name}
-                onClick={() => setSelectedFeature(feature.name)}
-                className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                  selectedFeature === feature.name
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50 hover:bg-accent'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">{feature.name}</span>
-                  <Badge variant={feature.avgVariance > 30 ? "destructive" : feature.avgVariance > 20 ? "warning" : "default"}>
-                    {feature.avgVariance.toFixed(1)}%
-                  </Badge>
+          <div className="bg-info/10 border border-info/20 rounded-lg p-4">
+            <h4 className="font-semibold text-info mb-3 flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Top Variance Drivers
+            </h4>
+            <div className="space-y-2">
+              {executiveSummary.topDrivers.map((driver, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-background/50 rounded p-2">
+                  <span className="text-sm">
+                    <span className="font-medium">{driver.factor}</span>: {driver.value}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={driver.avgVariance > 30 ? "destructive" : "warning"}>
+                      {driver.avgVariance.toFixed(1)}%
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{driver.count} claims</span>
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {feature.count} claims
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== 2. DETAILED ANALYSIS ===== */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Activity className="h-6 w-6 text-primary" />
+            Detailed Factor Analysis
+          </CardTitle>
+          <CardDescription>Deep dive into factor combinations and multi-injury patterns</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Multi-Injury Analysis */}
+          <div className="bg-warning/10 border border-warning/20 rounded-lg p-5">
+            <h4 className="font-semibold text-warning mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Multi-Injury Claim Analysis
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-background/50 rounded p-3">
+                <div className="text-xs text-muted-foreground mb-1">Single Injury Claims</div>
+                <div className="text-xl font-bold">{multiInjuryAnalysis.singleCount}</div>
+                <div className="text-sm text-muted-foreground">Avg Variance: {multiInjuryAnalysis.singleAvgVariance.toFixed(1)}%</div>
+              </div>
+              <div className="bg-background/50 rounded p-3">
+                <div className="text-xs text-muted-foreground mb-1">Multi-Injury Claims</div>
+                <div className="text-xl font-bold">{multiInjuryAnalysis.multiCount}</div>
+                <div className="text-sm text-muted-foreground">Avg Variance: {multiInjuryAnalysis.multiAvgVariance.toFixed(1)}%</div>
+              </div>
+              <div className="bg-background/50 rounded p-3">
+                <div className="text-xs text-muted-foreground mb-1">Variance Differential</div>
+                <div className={`text-xl font-bold ${multiInjuryAnalysis.varianceDifferential > 0 ? 'text-destructive' : 'text-success'}`}>
+                  {multiInjuryAnalysis.varianceDifferential > 0 ? '+' : ''}{multiInjuryAnalysis.varianceDifferential.toFixed(1)}%
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="bg-background/50 rounded p-3">
+              <p className="text-sm font-medium">{multiInjuryAnalysis.pattern}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Multi-injury claims average ${Math.round(multiInjuryAnalysis.multiAvgSettlement).toLocaleString()} settlements vs. 
+                ${Math.round(multiInjuryAnalysis.singleAvgSettlement).toLocaleString()} for single-injury claims.
+                {multiInjuryAnalysis.varianceDifferential > 15 && 
+                  " The model significantly underperforms on complex multi-injury cases, suggesting need for enhanced multi-injury prediction algorithms."}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-card rounded-xl p-6 border border-border shadow-md">
-          <h3 className="text-xl font-semibold mb-4">
-            {selectedFeature ? `Recommended Adjusters for ${selectedFeature}` : 'Select a Feature'}
-          </h3>
-          {selectedFeature ? (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {recommendedAdjusters.map((adjuster, idx) => (
-                <div key={adjuster.name} className="p-4 border border-border rounded-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                      idx === 0 ? 'bg-success/20 text-success' :
-                      idx === 1 ? 'bg-info/20 text-info' :
-                      'bg-muted text-muted-foreground'
-                    }`}>
-                      {idx + 1}
-                    </div>
+          {/* Factor Combination Analysis */}
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              High-Variance Factor Combinations
+            </h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              These factor combinations show the poorest model performance. Click to see detailed breakdown and contributing factors.
+            </p>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+              {topProblemCombos.map((combo, idx) => (
+                <div
+                  key={combo.key}
+                  onClick={() => setSelectedCombo(combo.key)}
+                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                    selectedCombo === combo.key
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <div className="font-semibold">{adjuster.name}</div>
-                      <div className="text-xs text-muted-foreground">{adjuster.count} claims handled</div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="font-mono text-xs">#{idx + 1}</Badge>
+                        <span className="font-semibold">{combo.displayName}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Impact Life: {combo.impactLife} | Avg Severity: {combo.avgSeverity.toFixed(1)} | {combo.count} claims
+                      </div>
                     </div>
+                    <Badge variant={combo.avgVariance > 35 ? "destructive" : "warning"} className="ml-2">
+                      {combo.avgVariance.toFixed(1)}% variance
+                    </Badge>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Avg Variance: </span>
-                    <span className="font-semibold text-success">{adjuster.avgVariance.toFixed(1)}%</span>
+                  
+                  {selectedCombo === combo.key && (
+                    <div className="border-t border-border pt-3 mt-3 space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="bg-muted/30 rounded p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Primary Geographic Driver</div>
+                          <div className="font-semibold">{combo.topCountyDriver?.name}</div>
+                          <div className="text-sm text-destructive">{combo.topCountyDriver?.avg.toFixed(1)}% avg variance</div>
+                        </div>
+                        <div className="bg-muted/30 rounded p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Avg Settlement</div>
+                          <div className="font-semibold">${Math.round(combo.avgSettlement).toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <div className="bg-info/10 rounded p-3 text-sm">
+                        <span className="font-medium">Insight: </span>
+                        This combination requires {combo.avgVariance > 40 ? 'urgent' : 'significant'} recalibration. 
+                        {combo.avgVariance > 40 && ' Consider creating a specialized sub-model for this segment.'}
+                        {combo.avgVariance <= 40 && combo.avgVariance > 30 && ' Geographic factors appear to be major contributors.'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Well-Performing Combinations */}
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-5 w-5" />
+              Well-Performing Combinations (Keep Current Parameters)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {wellPerformingCombos.map((combo) => (
+                <div key={combo.key} className="border border-success/30 bg-success/5 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-sm">{combo.displayName}</span>
+                    <Badge variant="success">{combo.avgVariance.toFixed(1)}%</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{combo.count} claims | No recalibration needed</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* County Variance Analysis */}
+          <div>
+            <h4 className="font-semibold mb-3">Geographic Variance Patterns</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold">County</th>
+                    <th className="px-3 py-2 text-left font-semibold">Tendency</th>
+                    <th className="px-3 py-2 text-left font-semibold">Avg Variance</th>
+                    <th className="px-3 py-2 text-left font-semibold">Claims</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {highVarianceCounties.slice(0, 5).map((county) => (
+                    <tr key={county.name} className="border-b border-border hover:bg-muted/20">
+                      <td className="px-3 py-2 font-medium">{county.name}, {county.state}</td>
+                      <td className="px-3 py-2">
+                        <Badge variant={county.tendencyBadge}>
+                          {county.tendency === 'Liberal' && <TrendingUp className="h-3 w-3 mr-1 inline" />}
+                          {county.tendency === 'Conservative' && <TrendingDown className="h-3 w-3 mr-1 inline" />}
+                          {county.tendency}
+                        </Badge>
+                      </td>
+                      <td className={`px-3 py-2 font-semibold ${county.avgSignedVariance > 0 ? 'text-destructive' : 'text-success'}`}>
+                        {county.avgSignedVariance > 0 ? '+' : ''}{county.avgSignedVariance.toFixed(1)}%
+                      </td>
+                      <td className="px-3 py-2">{county.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== 3. MODEL RECOMMENDATIONS ===== */}
+      <Card className="border-success/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Users className="h-6 w-6 text-success" />
+            Model Recalibration Recommendations
+          </CardTitle>
+          <CardDescription>Data-driven recommendations for model improvement and adjuster selection</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* What to Change */}
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" />
+              Priority Areas for Recalibration
+            </h4>
+            <div className="space-y-3">
+              {topProblemCombos.slice(0, 5).map((combo, idx) => (
+                <div key={combo.key} className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <span className="font-medium">{combo.displayName}</span>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Avg Variance: {combo.avgVariance.toFixed(1)}% | {combo.count} claims
+                      </div>
+                    </div>
+                    <Badge variant="destructive">Priority {idx + 1}</Badge>
+                  </div>
+                  <div className="text-sm bg-background/50 rounded p-2 mt-2">
+                    <span className="font-medium">Recommendation: </span>
+                    {combo.avgVariance > 40 ? 
+                      `Critical recalibration needed. Consider creating specialized parameters for ${combo.injuryGroup} cases in ${combo.venueRating} rated venues.` :
+                      `Moderate adjustment required. Focus on ${combo.topCountyDriver?.name} geographic patterns and ${combo.severityBucket} severity modeling.`
+                    }
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              <p>Click on a feature to see recommended adjusters</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-warning/10 rounded-xl p-6 border border-warning/20 mb-6">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-warning mb-2">High Variance County Analysis</h3>
-            <p className="text-sm text-muted-foreground">
-              Counties marked as <span className="font-semibold text-destructive">Liberal</span> tend to award settlements significantly higher than predicted (underprediction). 
-              Counties marked as <span className="font-semibold text-success">Conservative</span> tend to award lower than predicted (overprediction). 
-              This analysis considers variance patterns, settlement amounts, severity, and caution scores across all claims.
-            </p>
           </div>
-        </div>
-      </div>
 
-      <div className="bg-card rounded-xl p-6 border border-border shadow-md mb-6">
-        <h3 className="text-xl font-semibold mb-4">County Variance & Tendency Analysis</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50 border-b border-border">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">County</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">State</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Tendency</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Avg Variance</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Underprediction Rate</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Avg Settlement</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Avg Severity</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Claims</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Insight</th>
-              </tr>
-            </thead>
-            <tbody>
-              {highVarianceCounties.map((county) => (
-                <tr key={county.name} className="border-b border-border hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 text-sm font-medium">{county.name}</td>
-                  <td className="px-4 py-3 text-sm">{county.state}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <Badge variant={county.tendencyBadge}>
-                      {county.tendency === 'Liberal' && <TrendingUp className="h-3 w-3 mr-1 inline" />}
-                      {county.tendency === 'Conservative' && <TrendingDown className="h-3 w-3 mr-1 inline" />}
-                      {county.tendency}
+          {/* What to Keep */}
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-5 w-5" />
+              Maintain Current Parameters
+            </h4>
+            <div className="bg-success/5 border border-success/20 rounded-lg p-4">
+              <p className="text-sm mb-3">
+                These combinations show strong model performance. Avoid recalibrating these segments to prevent regression.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {wellPerformingCombos.map((combo) => (
+                  <div key={combo.key} className="bg-background/50 rounded p-2 text-sm">
+                    <div className="font-medium">{combo.displayName}</div>
+                    <div className="text-xs text-success">{combo.avgVariance.toFixed(1)}% variance ✓</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Adjuster Selection */}
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Recommended Adjusters for Recalibration
+            </h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              Adjusters are ranked by calibration score based on: low variance (40%), consistency (30%), experience (20%), and segment diversity (10%).
+              Higher scores indicate better candidates for training data in model recalibration.
+            </p>
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              {recommendedForCalibration.map((adjuster, idx) => (
+                <div
+                  key={adjuster.name}
+                  className={`border rounded-lg p-4 ${
+                    adjuster.calibrationScore > 80 ? 'border-success bg-success/5' :
+                    adjuster.calibrationScore > 70 ? 'border-primary bg-primary/5' :
+                    'border-border'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                        idx === 0 ? 'bg-success text-success-foreground' :
+                        idx === 1 ? 'bg-primary text-primary-foreground' :
+                        idx === 2 ? 'bg-secondary text-secondary-foreground' :
+                        'bg-muted text-muted-foreground'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-lg">{adjuster.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {adjuster.totalClaims} claims | {adjuster.bestCombo?.combo || 'Various segments'}
+                        </div>
+                      </div>
+                    </div>
+                    <Badge variant={adjuster.calibrationScore > 80 ? "success" : "default"} className="text-base px-3 py-1">
+                      Score: {adjuster.calibrationScore.toFixed(0)}
                     </Badge>
-                  </td>
-                  <td className={`px-4 py-3 text-sm font-semibold ${
-                    county.avgSignedVariance > 0 ? 'text-destructive' : 'text-success'
-                  }`}>
-                    {county.avgSignedVariance > 0 ? '+' : ''}{county.avgSignedVariance.toFixed(1)}%
-                  </td>
-                  <td className="px-4 py-3 text-sm">{county.underpredictRate.toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-sm">${Math.round(county.avgSettlement).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-sm">{county.avgSeverity.toFixed(1)}</td>
-                  <td className="px-4 py-3 text-sm">{county.count}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="text-xs text-muted-foreground max-w-xs">
-                      {county.tendency === 'Liberal' && (
-                        <span>
-                          Model underpredicts by {Math.abs(county.avgSignedVariance).toFixed(1)}%. 
-                          Consider increasing predictions by {Math.round(Math.abs(county.avgSignedVariance) * 0.8)}% for this venue.
-                        </span>
-                      )}
-                      {county.tendency === 'Conservative' && (
-                        <span>
-                          Model overpredicts by {Math.abs(county.avgSignedVariance).toFixed(1)}%. 
-                          Consider reducing predictions by {Math.round(Math.abs(county.avgSignedVariance) * 0.8)}% for this venue.
-                        </span>
-                      )}
-                      {county.tendency === 'Neutral' && (
-                        <span>Variance is balanced. Monitor for emerging patterns.</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </div>
 
-      <div className="bg-card rounded-xl p-6 border border-border shadow-md mb-6">
-        <h3 className="text-xl font-semibold mb-4">County Variance Distribution</h3>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={highVarianceCounties}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-            <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: 'Variance (%)', angle: -90, position: 'insideLeft' }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '0.5rem',
-              }}
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  return (
-                    <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
-                      <p className="font-semibold mb-1">{data.name}, {data.state}</p>
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Avg Variance: </span>
-                        <span className={data.avgSignedVariance > 0 ? 'text-destructive font-semibold' : 'text-success font-semibold'}>
-                          {data.avgSignedVariance > 0 ? '+' : ''}{data.avgSignedVariance.toFixed(1)}%
-                        </span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Tendency: </span>
-                        <span className="font-semibold">{data.tendency}</span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Claims: </span>
-                        <span>{data.count}</span>
-                      </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                    <div className="bg-muted/30 rounded p-2">
+                      <div className="text-xs text-muted-foreground">Avg Variance</div>
+                      <div className="font-semibold text-success">{adjuster.avgVariance.toFixed(1)}%</div>
                     </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Bar dataKey="avgSignedVariance" name="Avg Signed Variance (%)">
-              {highVarianceCounties.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.avgSignedVariance > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--success))'} 
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+                    <div className="bg-muted/30 rounded p-2">
+                      <div className="text-xs text-muted-foreground">Consistency</div>
+                      <div className="font-semibold">{(adjuster.consistency * 100).toFixed(0)}%</div>
+                    </div>
+                    <div className="bg-muted/30 rounded p-2">
+                      <div className="text-xs text-muted-foreground">Experience</div>
+                      <div className="font-semibold">{adjuster.totalClaims} claims</div>
+                    </div>
+                    <div className="bg-muted/30 rounded p-2">
+                      <div className="text-xs text-muted-foreground">Diversity</div>
+                      <div className="font-semibold">{(adjuster.diversityScore * 100).toFixed(0)}%</div>
+                    </div>
+                  </div>
 
-      <div className="bg-card rounded-xl p-6 border border-border shadow-md">
-        <h3 className="text-xl font-semibold mb-4">Temporal Variance Patterns</h3>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={temporalData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-            <YAxis stroke="hsl(var(--muted-foreground))" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '0.5rem',
-              }}
-            />
-            <Legend />
-            <Line type="monotone" dataKey="avgVariance" name="Avg Variance (%)" stroke="hsl(var(--chart-2))" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </>
+                  <div className="bg-info/10 rounded p-3 text-sm">
+                    <span className="font-medium text-info">Why Recommended: </span>
+                    {adjuster.calibrationScore > 80 && 
+                      `Exceptional performer with ${adjuster.avgVariance.toFixed(1)}% variance across ${adjuster.totalClaims} claims. High consistency (${(adjuster.consistency * 100).toFixed(0)}%) makes their decisions ideal training data. `}
+                    {adjuster.calibrationScore > 70 && adjuster.calibrationScore <= 80 && 
+                      `Strong performer with good consistency. Their experience across ${adjuster.totalClaims} claims provides valuable training signal. `}
+                    {adjuster.bestCombo && 
+                      `Best performance in ${adjuster.bestCombo.combo} segment (${adjuster.bestCombo.avgVar.toFixed(1)}% variance).`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== 4. ADDITIONAL INSIGHTS ===== */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Temporal Variance Trends</CardTitle>
+          <CardDescription>Track model performance consistency over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={temporalData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '0.5rem',
+                }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="avgVariance" name="Avg Variance (%)" stroke="hsl(var(--primary))" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
