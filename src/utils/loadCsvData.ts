@@ -32,7 +32,21 @@ export async function loadCsvData(): Promise<ClaimData[]> {
             final_settlement: Number(row.final_settlement || 0),
             predicted_pain_suffering: Number(row.predicted_pain_suffering || 0),
             variance_pct: Number(row.variance_pct || 0),
-            adjuster: String(row.adjuster || '')
+            adjuster: String(row.adjuster || ''),
+            // Causation factors
+            causation_probability: Number(row.causation_probability || 0),
+            causation_tx_delay: Number(row.causation_tx_delay || 0),
+            causation_tx_gaps: Number(row.causation_tx_gaps || 0),
+            causation_compliance: Number(row.causation_compliance || 0),
+            // Severity factors
+            severity_allowed_tx_period: Number(row.severity_allowed_tx_period || 0),
+            severity_initial_tx: Number(row.severity_initial_tx || 0),
+            severity_injections: Number(row.severity_injections || 0),
+            severity_objective_findings: Number(row.severity_objective_findings || 0),
+            severity_pain_mgmt: Number(row.severity_pain_mgmt || 0),
+            severity_type_tx: Number(row.severity_type_tx || 0),
+            severity_injury_site: Number(row.severity_injury_site || 0),
+            severity_code: Number(row.severity_code || 0)
           })) as ClaimData[];
           
           resolve(data);

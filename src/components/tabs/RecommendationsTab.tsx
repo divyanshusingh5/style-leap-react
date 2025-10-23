@@ -397,6 +397,71 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
       .sort((a, b) => a.month.localeCompare(b.month));
   }, [data]);
 
+  // ===== MODEL FACTOR WEIGHT ANALYSIS =====
+  const factorWeightAnalysis = useMemo(() => {
+    const causationFactors = [
+      { name: 'Causation Probability', field: 'causation_probability' as keyof ClaimData, weights: [0.3257, 0.2212, 0.4478, 0.0000] },
+      { name: 'Tx Delay', field: 'causation_tx_delay' as keyof ClaimData, weights: [0.1226, 0.0000] },
+      { name: 'Tx Gaps', field: 'causation_tx_gaps' as keyof ClaimData, weights: [0.1313, 0.0000] },
+      { name: 'Compliance', field: 'causation_compliance' as keyof ClaimData, weights: [0.1474, 0.0864] }
+    ];
+
+    const severityFactors = [
+      { name: 'Allowed Tx Period', field: 'severity_allowed_tx_period' as keyof ClaimData, weights: [1.4488, 0.0000, 2.3490, 3.1606, 3.8533, 4.3507] },
+      { name: 'Initial Tx', field: 'severity_initial_tx' as keyof ClaimData, weights: [1.5445, 1.2406, 0.6738, 0.0000] },
+      { name: 'Injections', field: 'severity_injections' as keyof ClaimData, weights: [0.0000, 1.9855, 3.0855, 3.4370, 5.1228] },
+      { name: 'Objective Findings', field: 'severity_objective_findings' as keyof ClaimData, weights: [2.7611, 0.0] },
+      { name: 'Pain Mgmt', field: 'severity_pain_mgmt' as keyof ClaimData, weights: [0.0000, 0.6396, 1.1258] },
+      { name: 'Type of Tx', field: 'severity_type_tx' as keyof ClaimData, weights: [2.0592, 3.2501] },
+      { name: 'Injury Site', field: 'severity_injury_site' as keyof ClaimData, weights: [1.8450, 1.1767, 0.9862, 0.4866, 0.0000] },
+      { name: 'Code', field: 'severity_code' as keyof ClaimData, weights: [0.4864, 0.3803, 0.8746, 0.0000] }
+    ];
+
+    const analyzeFactor = (factorName: string, field: keyof ClaimData, weights: number[]) => {
+      const weightVariance: Record<number, number[]> = {};
+      
+      data.forEach(claim => {
+        const weight = claim[field] as number;
+        if (!weightVariance[weight]) weightVariance[weight] = [];
+        weightVariance[weight].push(Math.abs(claim.variance_pct));
+      });
+
+      const weightStats = weights.map(w => {
+        const variances = weightVariance[w] || [];
+        const avgVar = variances.length > 0 ? variances.reduce((a, b) => a + b, 0) / variances.length : 0;
+        return {
+          weight: w,
+          avgVariance: avgVar,
+          count: variances.length,
+          needsReview: avgVar > 25 || (w === Math.max(...weights) && avgVar > 20)
+        };
+      }).sort((a, b) => b.avgVariance - a.avgVariance);
+
+      const maxVarianceWeight = weightStats[0];
+      const needsRecalibration = maxVarianceWeight.avgVariance > 25 || weightStats.filter(w => w.needsReview).length > weights.length / 2;
+
+      return {
+        factorName,
+        field,
+        weights: weightStats,
+        needsRecalibration,
+        maxVarianceWeight,
+        recommendation: needsRecalibration 
+          ? `High variance detected (${maxVarianceWeight.avgVariance.toFixed(1)}%). Review weight ${maxVarianceWeight.weight}.`
+          : `Performing well. Average variance below threshold.`
+      };
+    };
+
+    const causationAnalysis = causationFactors.map(f => analyzeFactor(f.name, f.field, f.weights));
+    const severityAnalysis = severityFactors.map(f => analyzeFactor(f.name, f.field, f.weights));
+
+    return {
+      causation: causationAnalysis,
+      severity: severityAnalysis,
+      totalNeedingRecalibration: [...causationAnalysis, ...severityAnalysis].filter(f => f.needsRecalibration).length
+    };
+  }, [data]);
+
   return (
     <div className="space-y-6">
       {/* ===== 1. EXECUTIVE SUMMARY ===== */}
@@ -752,7 +817,147 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
         </CardContent>
       </Card>
 
-      {/* ===== 4. ADDITIONAL INSIGHTS ===== */}
+      {/* ===== 4. MODEL FACTOR WEIGHT ANALYSIS ===== */}
+      <Card className="border-warning/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-warning" />
+            Model Factor Weight Analysis
+          </CardTitle>
+          <CardDescription>
+            Evaluate causation and severity factor weights to determine if recalibration is needed
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Summary */}
+          <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+            <h4 className="font-semibold text-warning mb-2">Analysis Summary</h4>
+            <p className="text-sm text-muted-foreground">
+              {factorWeightAnalysis.totalNeedingRecalibration === 0 
+                ? "All factor weights are performing within acceptable variance thresholds. No immediate recalibration needed."
+                : `${factorWeightAnalysis.totalNeedingRecalibration} factor${factorWeightAnalysis.totalNeedingRecalibration > 1 ? 's' : ''} showing high variance and requiring review for potential recalibration.`
+              }
+            </p>
+          </div>
+
+          {/* Causation Factors */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Causation Factors
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {factorWeightAnalysis.causation.map((factor) => (
+                <div key={factor.factorName} className={`border rounded-lg p-4 ${factor.needsRecalibration ? 'border-destructive/50 bg-destructive/5' : 'border-border'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-sm">{factor.factorName}</h4>
+                    {factor.needsRecalibration ? (
+                      <Badge variant="destructive" className="text-xs">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Review
+                      </Badge>
+                    ) : (
+                      <Badge variant="success" className="text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        OK
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    {factor.weights.slice(0, 3).map((w, idx) => (
+                      <div key={idx} className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Weight {w.weight}:</span>
+                        <span className={w.needsReview ? 'text-destructive font-semibold' : ''}>
+                          {w.avgVariance.toFixed(1)}% ({w.count} claims)
+                        </span>
+                      </div>
+                    ))}
+                    {factor.weights.length > 3 && (
+                      <div className="text-xs text-muted-foreground italic">
+                        +{factor.weights.length - 3} more weights...
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground border-t border-border pt-2">
+                    {factor.recommendation}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Severity Factors */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Severity Factors
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {factorWeightAnalysis.severity.map((factor) => (
+                <div key={factor.factorName} className={`border rounded-lg p-4 ${factor.needsRecalibration ? 'border-destructive/50 bg-destructive/5' : 'border-border'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-sm">{factor.factorName}</h4>
+                    {factor.needsRecalibration ? (
+                      <Badge variant="destructive" className="text-xs">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Review
+                      </Badge>
+                    ) : (
+                      <Badge variant="success" className="text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        OK
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    {factor.weights.slice(0, 3).map((w, idx) => (
+                      <div key={idx} className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Weight {w.weight}:</span>
+                        <span className={w.needsReview ? 'text-destructive font-semibold' : ''}>
+                          {w.avgVariance.toFixed(1)}% ({w.count} claims)
+                        </span>
+                      </div>
+                    ))}
+                    {factor.weights.length > 3 && (
+                      <div className="text-xs text-muted-foreground italic">
+                        +{factor.weights.length - 3} more weights...
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground border-t border-border pt-2">
+                    {factor.recommendation}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recalibration Recommendations */}
+          {factorWeightAnalysis.totalNeedingRecalibration > 0 && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+              <h4 className="font-semibold text-destructive mb-3 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Recommended Actions
+              </h4>
+              <ul className="space-y-2 text-sm">
+                {[...factorWeightAnalysis.causation, ...factorWeightAnalysis.severity]
+                  .filter(f => f.needsRecalibration)
+                  .map((factor, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-destructive mt-0.5">•</span>
+                      <span>
+                        <span className="font-semibold">{factor.factorName}:</span> {factor.recommendation}
+                      </span>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ===== 5. ADDITIONAL INSIGHTS ===== */}
       <Card>
         <CardHeader>
           <CardTitle>Temporal Variance Trends</CardTitle>

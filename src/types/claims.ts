@@ -15,6 +15,20 @@ export interface ClaimData {
   predicted_pain_suffering: number;
   variance_pct: number;
   adjuster: string;
+  // Causation factors
+  causation_probability: number;
+  causation_tx_delay: number;
+  causation_tx_gaps: number;
+  causation_compliance: number;
+  // Severity factors
+  severity_allowed_tx_period: number;
+  severity_initial_tx: number;
+  severity_injections: number;
+  severity_objective_findings: number;
+  severity_pain_mgmt: number;
+  severity_type_tx: number;
+  severity_injury_site: number;
+  severity_code: number;
 }
 
 export interface FilterState {
