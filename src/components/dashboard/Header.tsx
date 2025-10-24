@@ -28,17 +28,18 @@ export function Header({ filters, counties, onFilterChange }: HeaderProps) {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Select value={filters.injuryGroup} onValueChange={(v) => onFilterChange('injuryGroup', v)}>
+            <Select value={filters.injuryGroupCode} onValueChange={(v) => onFilterChange('injuryGroupCode', v)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Injury Group" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Injury Groups</SelectItem>
-                <SelectItem value="Group_NB">Neck & Back</SelectItem>
-                <SelectItem value="Group_JFL">Joint/Flex/Limb</SelectItem>
-                <SelectItem value="Group_SSU">Soft Tissue</SelectItem>
-                <SelectItem value="Group_LEG">Leg</SelectItem>
-                <SelectItem value="Group_HEAD">Head</SelectItem>
+                <SelectItem value="SSNB">SSNB - Sprain/Strain, Neck/Back</SelectItem>
+                <SelectItem value="MCHI">MCHI - Minor Closed Head Injury</SelectItem>
+                <SelectItem value="BULG">BULG - Bulge/Herniation</SelectItem>
+                <SelectItem value="DINB">DINB - Disc Injury, Neck/Back</SelectItem>
+                <SelectItem value="MSUE">MSUE - Muscle/Soft Tissue</SelectItem>
+                <SelectItem value="JFLE">JFLE - Joint/Flex/Limb</SelectItem>
               </SelectContent>
             </Select>
 
@@ -54,27 +55,27 @@ export function Header({ filters, counties, onFilterChange }: HeaderProps) {
               </SelectContent>
             </Select>
 
-            <Select value={filters.severity} onValueChange={(v) => onFilterChange('severity', v)}>
+            <Select value={filters.severityScore} onValueChange={(v) => onFilterChange('severityScore', v)}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Severity" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Severity</SelectItem>
-                <SelectItem value="low">Low (1-5)</SelectItem>
-                <SelectItem value="medium">Medium (6-10)</SelectItem>
-                <SelectItem value="high">High (11-15)</SelectItem>
+                <SelectItem value="low">Low (1-4)</SelectItem>
+                <SelectItem value="medium">Medium (4-8)</SelectItem>
+                <SelectItem value="high">High (8+)</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={filters.caution} onValueChange={(v) => onFilterChange('caution', v)}>
+            <Select value={filters.cautionLevel} onValueChange={(v) => onFilterChange('cautionLevel', v)}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Caution" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Caution</SelectItem>
-                <SelectItem value="low">Low (0-3)</SelectItem>
-                <SelectItem value="medium">Medium (4-7)</SelectItem>
-                <SelectItem value="high">High (8-10)</SelectItem>
+                <SelectItem value="all">All Caution Levels</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="High">High</SelectItem>
               </SelectContent>
             </Select>
 
@@ -84,14 +85,13 @@ export function Header({ filters, counties, onFilterChange }: HeaderProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Ratings</SelectItem>
-                <SelectItem value="moderate">Moderate</SelectItem>
-                <SelectItem value="conservative">Conservative</SelectItem>
-                <SelectItem value="liberal">Liberal</SelectItem>
-                <SelectItem value="extreme">Extreme</SelectItem>
+                <SelectItem value="Moderate">Moderate</SelectItem>
+                <SelectItem value="Conservative">Conservative</SelectItem>
+                <SelectItem value="Liberal">Liberal</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={filters.impactLife} onValueChange={(v) => onFilterChange('impactLife', v)}>
+            <Select value={filters.impact} onValueChange={(v) => onFilterChange('impact', v)}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Impact" />
               </SelectTrigger>

@@ -20,33 +20,33 @@ export function useClaimsData() {
       });
   }, []);
   const [filters, setFilters] = useState<FilterState>({
-    injuryGroup: 'all',
+    injuryGroupCode: 'all',
     county: 'all',
-    severity: 'all',
-    caution: 'all',
+    severityScore: 'all',
+    cautionLevel: 'all',
     venueRating: 'all',
-    impactLife: 'all',
+    impact: 'all',
     year: 'all'
   });
 
   const filteredData = useMemo(() => {
     return allData.filter(claim => {
-      if (filters.injuryGroup !== 'all' && claim.injury_group !== filters.injuryGroup) return false;
-      if (filters.county !== 'all' && claim.county !== filters.county) return false;
-      if (filters.venueRating !== 'all' && claim.venue_rating !== filters.venueRating) return false;
-      if (filters.impactLife !== 'all' && claim.impact_life !== parseInt(filters.impactLife)) return false;
+      if (filters.injuryGroupCode !== 'all' && claim.INJURY_GROUP_CODE !== filters.injuryGroupCode) return false;
+      if (filters.county !== 'all' && claim.COUNTYNAME !== filters.county) return false;
+      if (filters.venueRating !== 'all' && claim.VENUE_RATING !== filters.venueRating) return false;
+      if (filters.impact !== 'all' && claim.IMPACT !== parseInt(filters.impact)) return false;
       if (filters.year !== 'all' && !claim.claim_date.startsWith(filters.year)) return false;
       
-      if (filters.severity !== 'all') {
-        if (filters.severity === 'low' && claim.severity > 5) return false;
-        if (filters.severity === 'medium' && (claim.severity <= 5 || claim.severity > 10)) return false;
-        if (filters.severity === 'high' && claim.severity <= 10) return false;
+      if (filters.severityScore !== 'all') {
+        if (filters.severityScore === 'low' && claim.SEVERITY_SCORE > 4) return false;
+        if (filters.severityScore === 'medium' && (claim.SEVERITY_SCORE <= 4 || claim.SEVERITY_SCORE > 8)) return false;
+        if (filters.severityScore === 'high' && claim.SEVERITY_SCORE <= 8) return false;
       }
       
-      if (filters.caution !== 'all') {
-        if (filters.caution === 'low' && claim.caution_score > 3) return false;
-        if (filters.caution === 'medium' && (claim.caution_score <= 3 || claim.caution_score > 7)) return false;
-        if (filters.caution === 'high' && claim.caution_score <= 7) return false;
+      if (filters.cautionLevel !== 'all') {
+        if (filters.cautionLevel === 'Low' && claim.CAUTION_LEVEL !== 'Low') return false;
+        if (filters.cautionLevel === 'Medium' && claim.CAUTION_LEVEL !== 'Medium') return false;
+        if (filters.cautionLevel === 'High' && claim.CAUTION_LEVEL !== 'High') return false;
       }
       
       return true;
@@ -58,7 +58,7 @@ export function useClaimsData() {
   };
 
   const counties = useMemo(() => {
-    const uniqueCounties = [...new Set(allData.map(d => d.county))];
+    const uniqueCounties = [...new Set(allData.map(d => d.COUNTYNAME))];
     return uniqueCounties.sort();
   }, [allData]);
 

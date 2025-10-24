@@ -29,7 +29,7 @@ export function AlignmentTab({ data }: AlignmentTabProps) {
       if (!monthly[month]) {
         monthly[month] = { consensus: 0, model: 0, count: 0 };
       }
-      monthly[month].consensus += claim.final_settlement;
+      monthly[month].consensus += claim.DOLLARAMOUNTHIGH;
       monthly[month].model += claim.predicted_pain_suffering;
       monthly[month].count += 1;
     });
@@ -52,7 +52,7 @@ export function AlignmentTab({ data }: AlignmentTabProps) {
         yearly[year] = { variance: 0, settlement: 0, count: 0 };
       }
       yearly[year].variance += Math.abs(claim.variance_pct);
-      yearly[year].settlement += claim.final_settlement;
+      yearly[year].settlement += claim.DOLLARAMOUNTHIGH;
       yearly[year].count += 1;
     });
 

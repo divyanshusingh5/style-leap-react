@@ -1,13 +1,15 @@
 import { ClaimData } from "@/types/claims";
 
 export function generateDummyData(): ClaimData[] {
-  const counties = ['Cook', 'Mecklenburg', 'Harris', 'Maricopa', 'King', 'Miami-Dade', 'Dallas', 'Orange', 'Broward', 'Riverside', 'San Diego', 'Bexar'];
-  const states = ['IL', 'NC', 'TX', 'AZ', 'WA', 'FL', 'TX', 'CA', 'FL', 'CA', 'CA', 'TX'];
-  const bodyParts = ['Spine', 'Neck', 'Jaw', 'Joint Left', 'Right', 'Leg', 'Arm', 'Head'];
-  const injuries = ['Whiplash', 'Fracture', 'JFLE', 'SSUE', 'Sprain', 'Tear', 'Contusion'];
-  const injuryGroups = ['Group_NB', 'Group_JFL', 'Group_SSU', 'Group_LEG', 'Group_HEAD', 'Group_ARM'];
+  const counties = ['Los Angeles', 'Cook', 'Harris', 'Maricopa', 'King', 'Miami-Dade', 'Dallas', 'Orange', 'Broward', 'Riverside', 'San Diego', 'Bexar'];
+  const states = ['CA', 'IL', 'TX', 'AZ', 'WA', 'FL', 'TX', 'CA', 'FL', 'CA', 'CA', 'TX'];
+  const bodyParts = ['Neck/Back', 'Head', 'Shoulder', 'Knee', 'Ankle', 'Wrist', 'Elbow'];
+  const injuries = ['Sprain/Strain', 'Fracture', 'Laceration', 'Contusion', 'Minor Closed Head Injury/Mild Concussion'];
+  const injuryGroupCodes = ['SSNB', 'MCHI', 'BULG', 'DINB', 'MSUE', 'JFLE'];
+  const injuryGroupTexts = ['Sprain/Strain, Neck/Back', 'Minor Closed Head Injury', 'Bulge/Herniation', 'Disc Injury, Neck/Back', 'Muscle/Soft Tissue, Upper Extremity', 'Joint/Flex/Limb Extremity'];
   const adjusters = ['Sarah Williams', 'Mike Johnson', 'Emily Chen', 'David Martinez', 'Lisa Anderson', 'James Wilson'];
-  const venueRatings = ['moderate', 'conservative', 'liberal', 'extreme'];
+  const venueRatings = ['Moderate', 'Conservative', 'Liberal'];
+  const cautionLevels = ['Low', 'Medium', 'High'];
   
   // Causation factor weight options
   const causationProbabilityWeights = [0.3257, 0.2212, 0.4478, 0.0000];
@@ -39,33 +41,71 @@ export function generateDummyData(): ClaimData[] {
     const day = Math.floor(Math.random() * 28) + 1;
     const claimDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
-    const daysToSettle = Math.floor(Math.random() * 120) + 30;
-    const severity = Math.floor(Math.random() * 15) + 1;
-    const cautionScore = Math.floor(Math.random() * 11);
-    const venueRating = venueRatings[Math.floor(Math.random() * 4)];
-    const impactLife = Math.floor(Math.random() * 5);
-    const finalSettlement = Math.floor(Math.random() * 150000) + 2000;
-    const predicted = finalSettlement * (0.7 + Math.random() * 0.6);
-    const variancePct = ((finalSettlement - predicted) / predicted) * 100;
+    const settlementDays = Math.floor(Math.random() * 350) + 7;
+    const settlementMonths = Math.round(settlementDays / 30);
+    const settlementYears = parseFloat((settlementDays / 365).toFixed(1));
+    
+    const severityScore = parseFloat((Math.random() * 12 + 1).toFixed(1));
+    const impact = Math.floor(Math.random() * 5);
+    const venueRating = venueRatings[Math.floor(Math.random() * 3)];
+    const ratingWeight = venueRating === 'Liberal' ? 132 : venueRating === 'Moderate' ? 100 : 80;
+    const cautionLevel = cautionLevels[Math.floor(Math.random() * 3)];
+    
+    const dollarAmountHigh = Math.floor(Math.random() * 150000) + 2500;
+    const causationHighRec = parseFloat((0.5 + Math.random() * 0.5).toFixed(2));
+    const predicted = dollarAmountHigh * (0.7 + Math.random() * 0.6);
+    const variancePct = ((dollarAmountHigh - predicted) / predicted) * 100;
+    
     const countyIdx = Math.floor(Math.random() * counties.length);
+    const injuryCount = Math.floor(Math.random() * 4) + 1;
+    const bodypartCount = Math.floor(Math.random() * 3) + 1;
+    const injuryGroupCount = Math.floor(Math.random() * 3) + 1;
+    
+    // Generate multiple body parts and injuries
+    const selectedBodyParts = Array.from({ length: bodypartCount }, () => 
+      bodyParts[Math.floor(Math.random() * bodyParts.length)]
+    );
+    const selectedInjuries = Array.from({ length: injuryCount }, () => 
+      injuries[Math.floor(Math.random() * injuries.length)]
+    );
+    const selectedGroupCodes = Array.from({ length: injuryGroupCount }, () => 
+      injuryGroupCodes[Math.floor(Math.random() * injuryGroupCodes.length)]
+    );
+    const selectedGroupTexts = Array.from({ length: injuryGroupCount }, () => 
+      injuryGroupTexts[Math.floor(Math.random() * injuryGroupTexts.length)]
+    );
     
     data.push({
       claim_id: `CLM-${1000 + i}`,
+      VERSIONID: 100000 + Math.floor(Math.random() * 900000),
       claim_date: claimDate,
-      days_to_settlement: daysToSettle,
-      county: counties[countyIdx],
-      state: states[countyIdx],
-      body_part: bodyParts[Math.floor(Math.random() * bodyParts.length)],
-      primary_injury: injuries[Math.floor(Math.random() * injuries.length)],
-      injury_group: injuryGroups[Math.floor(Math.random() * injuryGroups.length)],
-      severity,
-      caution_score: cautionScore,
-      venue_rating: venueRating,
-      impact_life: impactLife,
-      final_settlement: finalSettlement,
+      DURATIONTOREPORT: Math.floor(Math.random() * 15),
+      DOLLARAMOUNTHIGH: dollarAmountHigh,
+      ALL_BODYPARTS: selectedBodyParts.join(', '),
+      ALL_INJURIES: selectedInjuries.join(', '),
+      ALL_INJURYGROUP_CODES: selectedGroupCodes.join(', '),
+      ALL_INJURYGROUP_TEXTS: selectedGroupTexts.join(', '),
+      PRIMARY_INJURY: selectedInjuries[0],
+      PRIMARY_BODYPART: selectedBodyParts[0],
+      PRIMARY_INJURYGROUP_CODE: selectedGroupCodes[0],
+      INJURY_COUNT: injuryCount,
+      BODYPART_COUNT: bodypartCount,
+      INJURYGROUP_COUNT: injuryGroupCount,
+      SETTLEMENT_DAYS: settlementDays,
+      SETTLEMENT_MONTHS: settlementMonths,
+      SETTLEMENT_YEARS: settlementYears,
+      IMPACT: impact,
+      COUNTYNAME: counties[countyIdx],
+      VENUESTATE: states[countyIdx],
+      VENUE_RATING: venueRating,
+      RATINGWEIGHT: ratingWeight,
+      INJURY_GROUP_CODE: selectedGroupCodes[0],
+      CAUSATION__HIGH_RECOMMENDATION: causationHighRec,
+      SEVERITY_SCORE: severityScore,
+      CAUTION_LEVEL: cautionLevel,
+      adjuster: adjusters[Math.floor(Math.random() * adjusters.length)],
       predicted_pain_suffering: predicted,
       variance_pct: variancePct,
-      adjuster: adjusters[Math.floor(Math.random() * adjusters.length)],
       // Causation factors
       causation_probability: causationProbabilityWeights[Math.floor(Math.random() * causationProbabilityWeights.length)],
       causation_tx_delay: causationTxDelayWeights[Math.floor(Math.random() * causationTxDelayWeights.length)],

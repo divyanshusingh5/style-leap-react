@@ -13,11 +13,11 @@ export function InjuryTab({ data }: InjuryTabProps) {
     const groups: { [key: string]: { settlement: number; count: number } } = {};
     
     data.forEach(claim => {
-      if (!groups[claim.injury_group]) {
-        groups[claim.injury_group] = { settlement: 0, count: 0 };
+      if (!groups[claim.INJURY_GROUP_CODE]) {
+        groups[claim.INJURY_GROUP_CODE] = { settlement: 0, count: 0 };
       }
-      groups[claim.injury_group].settlement += claim.final_settlement;
-      groups[claim.injury_group].count += 1;
+      groups[claim.INJURY_GROUP_CODE].settlement += claim.DOLLARAMOUNTHIGH;
+      groups[claim.INJURY_GROUP_CODE].count += 1;
     });
 
     return Object.entries(groups)
@@ -32,11 +32,11 @@ export function InjuryTab({ data }: InjuryTabProps) {
     const groups: { [key: string]: { variance: number; count: number } } = {};
     
     data.forEach(claim => {
-      if (!groups[claim.injury_group]) {
-        groups[claim.injury_group] = { variance: 0, count: 0 };
+      if (!groups[claim.INJURY_GROUP_CODE]) {
+        groups[claim.INJURY_GROUP_CODE] = { variance: 0, count: 0 };
       }
-      groups[claim.injury_group].variance += Math.abs(claim.variance_pct);
-      groups[claim.injury_group].count += 1;
+      groups[claim.INJURY_GROUP_CODE].variance += Math.abs(claim.variance_pct);
+      groups[claim.INJURY_GROUP_CODE].count += 1;
     });
 
     return Object.entries(groups)
@@ -51,7 +51,7 @@ export function InjuryTab({ data }: InjuryTabProps) {
     const groups: { [key: string]: number } = {};
     
     data.forEach(claim => {
-      groups[claim.injury_group] = (groups[claim.injury_group] || 0) + 1;
+      groups[claim.INJURY_GROUP_CODE] = (groups[claim.INJURY_GROUP_CODE] || 0) + 1;
     });
 
     return Object.entries(groups)

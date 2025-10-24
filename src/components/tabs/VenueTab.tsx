@@ -17,11 +17,11 @@ export function VenueTab({ data }: VenueTabProps) {
     const states: { [key: string]: { settlement: number; count: number } } = {};
     
     data.forEach(claim => {
-      if (!states[claim.state]) {
-        states[claim.state] = { settlement: 0, count: 0 };
+      if (!states[claim.VENUESTATE]) {
+        states[claim.VENUESTATE] = { settlement: 0, count: 0 };
       }
-      states[claim.state].settlement += claim.final_settlement;
-      states[claim.state].count += 1;
+      states[claim.VENUESTATE].settlement += claim.DOLLARAMOUNTHIGH;
+      states[claim.VENUESTATE].count += 1;
     });
 
     return Object.entries(states)
@@ -36,7 +36,7 @@ export function VenueTab({ data }: VenueTabProps) {
     const states: { [key: string]: number } = {};
     
     data.forEach(claim => {
-      states[claim.state] = (states[claim.state] || 0) + 1;
+      states[claim.VENUESTATE] = (states[claim.VENUESTATE] || 0) + 1;
     });
 
     return Object.entries(states)
@@ -48,11 +48,11 @@ export function VenueTab({ data }: VenueTabProps) {
     const counties: { [key: string]: { variance: number; count: number } } = {};
     
     data.forEach(claim => {
-      if (!counties[claim.county]) {
-        counties[claim.county] = { variance: 0, count: 0 };
+      if (!counties[claim.COUNTYNAME]) {
+        counties[claim.COUNTYNAME] = { variance: 0, count: 0 };
       }
-      counties[claim.county].variance += Math.abs(claim.variance_pct);
-      counties[claim.county].count += 1;
+      counties[claim.COUNTYNAME].variance += Math.abs(claim.variance_pct);
+      counties[claim.COUNTYNAME].count += 1;
     });
 
     return Object.entries(counties)
@@ -68,12 +68,12 @@ export function VenueTab({ data }: VenueTabProps) {
     const counties: { [key: string]: { variance: number; count: number; settlement: number } } = {};
     
     data.forEach(claim => {
-      if (!counties[claim.county]) {
-        counties[claim.county] = { variance: 0, count: 0, settlement: 0 };
+      if (!counties[claim.COUNTYNAME]) {
+        counties[claim.COUNTYNAME] = { variance: 0, count: 0, settlement: 0 };
       }
-      counties[claim.county].variance += Math.abs(claim.variance_pct);
-      counties[claim.county].count += 1;
-      counties[claim.county].settlement += claim.final_settlement;
+      counties[claim.COUNTYNAME].variance += Math.abs(claim.variance_pct);
+      counties[claim.COUNTYNAME].count += 1;
+      counties[claim.COUNTYNAME].settlement += claim.DOLLARAMOUNTHIGH;
     });
 
     return Object.entries(counties)

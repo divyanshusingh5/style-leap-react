@@ -23,18 +23,18 @@ export function OverviewTab({ data }: OverviewTabProps) {
   const claimsChange = ((totalClaims - lyTotalClaims) / lyTotalClaims) * 100;
   
   const avgSettlement = currentData.length > 0 
-    ? currentData.reduce((sum, d) => sum + d.final_settlement, 0) / currentData.length 
+    ? currentData.reduce((sum, d) => sum + d.DOLLARAMOUNTHIGH, 0) / currentData.length 
     : 0;
   const lyAvgSettlement = lyData.length > 0 
-    ? lyData.reduce((sum, d) => sum + d.final_settlement, 0) / lyData.length 
+    ? lyData.reduce((sum, d) => sum + d.DOLLARAMOUNTHIGH, 0) / lyData.length 
     : 0;
   const settlementChange = ((avgSettlement - lyAvgSettlement) / lyAvgSettlement) * 100;
   
   const avgDays = currentData.length > 0 
-    ? currentData.reduce((sum, d) => sum + d.days_to_settlement, 0) / currentData.length 
+    ? currentData.reduce((sum, d) => sum + d.SETTLEMENT_DAYS, 0) / currentData.length 
     : 0;
   const lyAvgDays = lyData.length > 0 
-    ? lyData.reduce((sum, d) => sum + d.days_to_settlement, 0) / lyData.length 
+    ? lyData.reduce((sum, d) => sum + d.SETTLEMENT_DAYS, 0) / lyData.length 
     : 0;
   const daysChange = ((avgDays - lyAvgDays) / lyAvgDays) * 100;
   
@@ -45,15 +45,15 @@ export function OverviewTab({ data }: OverviewTabProps) {
   const varianceChange = ((highVariancePct - lyHighVariancePct) / lyHighVariancePct) * 100;
   
   // Overprediction and Underprediction KPIs
-  const overpredictedClaims = currentData.filter(d => d.predicted_pain_suffering > d.final_settlement).length;
+  const overpredictedClaims = currentData.filter(d => d.predicted_pain_suffering > d.DOLLARAMOUNTHIGH).length;
   const overpredictionPct = currentData.length > 0 ? (overpredictedClaims / currentData.length) * 100 : 0;
-  const lyOverpredicted = lyData.filter(d => d.predicted_pain_suffering > d.final_settlement).length;
+  const lyOverpredicted = lyData.filter(d => d.predicted_pain_suffering > d.DOLLARAMOUNTHIGH).length;
   const lyOverpredictionPct = lyData.length > 0 ? (lyOverpredicted / lyData.length) * 100 : 0;
   const overpredictionChange = lyOverpredictionPct > 0 ? ((overpredictionPct - lyOverpredictionPct) / lyOverpredictionPct) * 100 : 0;
   
-  const underpredictedClaims = currentData.filter(d => d.predicted_pain_suffering < d.final_settlement).length;
+  const underpredictedClaims = currentData.filter(d => d.predicted_pain_suffering < d.DOLLARAMOUNTHIGH).length;
   const underpredictionPct = currentData.length > 0 ? (underpredictedClaims / currentData.length) * 100 : 0;
-  const lyUnderpredicted = lyData.filter(d => d.predicted_pain_suffering < d.final_settlement).length;
+  const lyUnderpredicted = lyData.filter(d => d.predicted_pain_suffering < d.DOLLARAMOUNTHIGH).length;
   const lyUnderpredictionPct = lyData.length > 0 ? (lyUnderpredicted / lyData.length) * 100 : 0;
   const underpredictionChange = lyUnderpredictionPct > 0 ? ((underpredictionPct - lyUnderpredictionPct) / lyUnderpredictionPct) * 100 : 0;
   
@@ -172,10 +172,10 @@ export function OverviewTab({ data }: OverviewTabProps) {
               {priorityClaims.map((claim, idx) => (
                 <tr key={claim.claim_id} className="border-b border-border hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 text-sm font-medium text-primary">{claim.claim_id}</td>
-                  <td className="px-4 py-3 text-sm">{claim.county}</td>
-                  <td className="px-4 py-3 text-sm">{claim.injury_group.replace('Group_', '')}</td>
-                  <td className="px-4 py-3 text-sm">{claim.severity}</td>
-                  <td className="px-4 py-3 text-sm">${claim.final_settlement.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm">{claim.COUNTYNAME}</td>
+                  <td className="px-4 py-3 text-sm">{claim.INJURY_GROUP_CODE}</td>
+                  <td className="px-4 py-3 text-sm">{claim.SEVERITY_SCORE.toFixed(1)}</td>
+                  <td className="px-4 py-3 text-sm">${claim.DOLLARAMOUNTHIGH.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm">${Math.round(claim.predicted_pain_suffering).toLocaleString()}</td>
                   <td className={`px-4 py-3 text-sm font-semibold ${claim.variance_pct > 0 ? 'text-destructive' : 'text-success'}`}>
                     {claim.variance_pct > 0 ? '+' : ''}{claim.variance_pct.toFixed(1)}%

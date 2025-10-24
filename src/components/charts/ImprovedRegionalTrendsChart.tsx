@@ -24,21 +24,21 @@ export function ImprovedRegionalTrendsChart({ data, metric }: ImprovedRegionalTr
       if (!monthly[month]) {
         monthly[month] = {};
       }
-      if (!monthly[month][claim.state]) {
-        monthly[month][claim.state] = { value: 0, count: 0 };
+      if (!monthly[month][claim.VENUESTATE]) {
+        monthly[month][claim.VENUESTATE] = { value: 0, count: 0 };
       }
       
       if (metric === 'settlement') {
-        monthly[month][claim.state].value += claim.final_settlement;
+        monthly[month][claim.VENUESTATE].value += claim.DOLLARAMOUNTHIGH;
       } else if (metric === 'variance') {
-        monthly[month][claim.state].value += Math.abs(claim.variance_pct);
+        monthly[month][claim.VENUESTATE].value += Math.abs(claim.variance_pct);
       } else {
-        monthly[month][claim.state].value += 1;
+        monthly[month][claim.VENUESTATE].value += 1;
       }
-      monthly[month][claim.state].count += 1;
+      monthly[month][claim.VENUESTATE].count += 1;
     });
 
-    const states = [...new Set(data.map(d => d.state))].slice(0, 5);
+    const states = [...new Set(data.map(d => d.VENUESTATE))].slice(0, 5);
     
     return Object.entries(monthly)
       .map(([month, stateData]) => {
@@ -55,7 +55,7 @@ export function ImprovedRegionalTrendsChart({ data, metric }: ImprovedRegionalTr
       .sort((a, b) => a.month.localeCompare(b.month));
   }, [data, metric]);
 
-  const states = useMemo(() => [...new Set(data.map(d => d.state))].slice(0, 5), [data]);
+  const states = useMemo(() => [...new Set(data.map(d => d.VENUESTATE))].slice(0, 5), [data]);
 
   const formatValue = (value: number) => {
     if (metric === 'settlement') {

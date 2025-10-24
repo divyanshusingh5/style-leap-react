@@ -45,7 +45,7 @@ export function AdjusterTab({ data }: AdjusterTabProps) {
       if (!adjusters[claim.adjuster]) {
         adjusters[claim.adjuster] = { days: 0, count: 0 };
       }
-      adjusters[claim.adjuster].days += claim.days_to_settlement;
+      adjusters[claim.adjuster].days += claim.SETTLEMENT_DAYS;
       adjusters[claim.adjuster].count += 1;
     });
 

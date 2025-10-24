@@ -1,20 +1,34 @@
 export interface ClaimData {
   claim_id: string;
+  VERSIONID: number;
   claim_date: string;
-  days_to_settlement: number;
-  county: string;
-  state: string;
-  body_part: string;
-  primary_injury: string;
-  injury_group: string;
-  severity: number;
-  caution_score: number;
-  venue_rating: string;
-  impact_life: number;
-  final_settlement: number;
+  DURATIONTOREPORT: number;
+  DOLLARAMOUNTHIGH: number;
+  ALL_BODYPARTS: string;
+  ALL_INJURIES: string;
+  ALL_INJURYGROUP_CODES: string;
+  ALL_INJURYGROUP_TEXTS: string;
+  PRIMARY_INJURY: string;
+  PRIMARY_BODYPART: string;
+  PRIMARY_INJURYGROUP_CODE: string;
+  INJURY_COUNT: number;
+  BODYPART_COUNT: number;
+  INJURYGROUP_COUNT: number;
+  SETTLEMENT_DAYS: number;
+  SETTLEMENT_MONTHS: number;
+  SETTLEMENT_YEARS: number;
+  IMPACT: number;
+  COUNTYNAME: string;
+  VENUESTATE: string;
+  VENUE_RATING: string;
+  RATINGWEIGHT: number;
+  INJURY_GROUP_CODE: string;
+  CAUSATION__HIGH_RECOMMENDATION: number;
+  SEVERITY_SCORE: number;
+  CAUTION_LEVEL: string;
+  adjuster: string;
   predicted_pain_suffering: number;
   variance_pct: number;
-  adjuster: string;
   // Causation factors
   causation_probability: number;
   causation_tx_delay: number;
@@ -32,12 +46,12 @@ export interface ClaimData {
 }
 
 export interface FilterState {
-  injuryGroup: string;
+  injuryGroupCode: string;
   county: string;
-  severity: string;
-  caution: string;
+  severityScore: string;
+  cautionLevel: string;
   venueRating: string;
-  impactLife: string;
+  impact: string;
   year: string;
 }
 

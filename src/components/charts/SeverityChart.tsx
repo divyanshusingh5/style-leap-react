@@ -8,16 +8,16 @@ interface SeverityChartProps {
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
 
 export function SeverityChart({ data }: SeverityChartProps) {
-  const severityRanges: { [key: string]: number } = { 
-    'Low (1-5)': 0, 
-    'Medium (6-10)': 0, 
-    'High (11-15)': 0 
+const severityRanges: { [key: string]: number } = { 
+    'Low (1-4)': 0, 
+    'Medium (4-8)': 0, 
+    'High (8+)': 0 
   };
   
   data.forEach(d => {
-    if (d.severity <= 5) severityRanges['Low (1-5)']++;
-    else if (d.severity <= 10) severityRanges['Medium (6-10)']++;
-    else severityRanges['High (11-15)']++;
+    if (d.SEVERITY_SCORE <= 4) severityRanges['Low (1-4)']++;
+    else if (d.SEVERITY_SCORE <= 8) severityRanges['Medium (4-8)']++;
+    else severityRanges['High (8+)']++;
   });
   
   const chartData = Object.entries(severityRanges).map(([name, value]) => ({

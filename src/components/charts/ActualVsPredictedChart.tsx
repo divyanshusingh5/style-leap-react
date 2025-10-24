@@ -13,7 +13,7 @@ export function ActualVsPredictedChart({ data }: ActualVsPredictedChartProps) {
     if (!monthlyData[month]) {
       monthlyData[month] = { actual: 0, predicted: 0, count: 0 };
     }
-    monthlyData[month].actual += d.final_settlement;
+    monthlyData[month].actual += d.DOLLARAMOUNTHIGH;
     monthlyData[month].predicted += d.predicted_pain_suffering;
     monthlyData[month].count++;
   });

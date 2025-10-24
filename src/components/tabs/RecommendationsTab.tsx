@@ -29,20 +29,20 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
 
     data.forEach(claim => {
       const abs = Math.abs(claim.variance_pct);
-      if (!varianceByFactor.injuryGroup[claim.injury_group]) varianceByFactor.injuryGroup[claim.injury_group] = [];
-      varianceByFactor.injuryGroup[claim.injury_group].push(abs);
+      if (!varianceByFactor.injuryGroup[claim.INJURY_GROUP_CODE]) varianceByFactor.injuryGroup[claim.INJURY_GROUP_CODE] = [];
+      varianceByFactor.injuryGroup[claim.INJURY_GROUP_CODE].push(abs);
       
-      const sevBucket = claim.severity <= 5 ? 'Low' : claim.severity <= 10 ? 'Medium' : 'High';
+      const sevBucket = claim.SEVERITY_SCORE <= 4 ? 'Low' : claim.SEVERITY_SCORE <= 8 ? 'Medium' : 'High';
       if (!varianceByFactor.severity[sevBucket]) varianceByFactor.severity[sevBucket] = [];
       varianceByFactor.severity[sevBucket].push(abs);
       
-      if (!varianceByFactor.county[claim.county]) varianceByFactor.county[claim.county] = [];
-      varianceByFactor.county[claim.county].push(abs);
+      if (!varianceByFactor.county[claim.COUNTYNAME]) varianceByFactor.county[claim.COUNTYNAME] = [];
+      varianceByFactor.county[claim.COUNTYNAME].push(abs);
       
-      if (!varianceByFactor.venueRating[claim.venue_rating]) varianceByFactor.venueRating[claim.venue_rating] = [];
-      varianceByFactor.venueRating[claim.venue_rating].push(abs);
+      if (!varianceByFactor.venueRating[claim.VENUE_RATING]) varianceByFactor.venueRating[claim.VENUE_RATING] = [];
+      varianceByFactor.venueRating[claim.VENUE_RATING].push(abs);
       
-      const impactKey = `Impact-${claim.impact_life}`;
+      const impactKey = `Impact-${claim.IMPACT}`;
       if (!varianceByFactor.impactLife[impactKey]) varianceByFactor.impactLife[impactKey] = [];
       varianceByFactor.impactLife[impactKey].push(abs);
     });
@@ -70,19 +70,19 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
     data.forEach(claim => {
       const absVariance = Math.abs(claim.variance_pct);
       // Heuristic: if body_part contains comma, slash, "and", or "multiple" it's multi-injury
-      const bodyPartLower = claim.body_part.toLowerCase();
+      const bodyPartLower = claim.PRIMARY_BODYPART.toLowerCase();
       const isMulti = bodyPartLower.includes(',') || 
                       bodyPartLower.includes('/') || 
                       bodyPartLower.includes(' and ') ||
                       bodyPartLower.includes('multiple') ||
-                      claim.impact_life >= 4; // High impact often indicates multiple injuries
+                      claim.IMPACT >= 4; // High impact often indicates multiple injuries
       
       if (isMulti) {
         multiInjury.push(absVariance);
-        multiInjurySettlements.push(claim.final_settlement);
+        multiInjurySettlements.push(claim.DOLLARAMOUNTHIGH);
       } else {
         singleInjury.push(absVariance);
-        singleInjurySettlements.push(claim.final_settlement);
+        singleInjurySettlements.push(claim.DOLLARAMOUNTHIGH);
       }
     });
 
@@ -121,24 +121,18 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
     }> = {};
 
     data.forEach(claim => {
-      const sevBucket = claim.severity <= 5 ? 'Low-Sev' : claim.severity <= 10 ? 'Mid-Sev' : 'High-Sev';
-      const comboKey = `${claim.injury_group}|${sevBucket}|${claim.venue_rating}|Impact-${claim.impact_life}`;
+      const sevBucket = claim.SEVERITY_SCORE <= 4 ? 'Low-Sev' : claim.SEVERITY_SCORE <= 8 ? 'Mid-Sev' : 'High-Sev';
+      const comboKey = `${claim.INJURY_GROUP_CODE}|${sevBucket}|${claim.VENUE_RATING}|${claim.IMPACT}`;
+      const absVariance = Math.abs(claim.variance_pct);
       
       if (!combos[comboKey]) {
         combos[comboKey] = {
+          injuryGroup: claim.INJURY_GROUP_CODE,
+          severity: sevBucket,
+          venueRating: claim.VENUE_RATING,
+          impact: claim.IMPACT,
           claims: [],
-          variance: [],
-          key: comboKey,
-          injuryGroup: claim.injury_group,
-          severityBucket: sevBucket,
-          venueRating: claim.venue_rating,
-          impactLife: claim.impact_life,
-          factors: {
-            injury_group: claim.injury_group,
-            severity: sevBucket,
-            venue_rating: claim.venue_rating,
-            impact_life: claim.impact_life
-          }
+          variance: []
         };
       }
       
@@ -150,16 +144,49 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
       .filter(combo => combo.claims.length >= 3) // Only meaningful combinations
       .map(combo => {
         const avgVariance = combo.variance.reduce((a, b) => a + b, 0) / combo.variance.length;
-        const avgSettlement = combo.claims.reduce((sum, c) => sum + c.final_settlement, 0) / combo.claims.length;
-        const avgSeverity = combo.claims.reduce((sum, c) => sum + c.severity, 0) / combo.claims.length;
+        const avgSettlement = combo.claims.reduce((sum, c) => sum + c.DOLLARAMOUNTHIGH, 0) / combo.claims.length;
+        const avgSeverity = combo.claims.reduce((sum, c) => sum + c.SEVERITY_SCORE, 0) / combo.claims.length;
         
         // Factor impact analysis for this combination
         const countyVariance: Record<string, number[]> = {};
         const adjusterVariance: Record<string, number[]> = {};
         
         combo.claims.forEach(c => {
-          if (!countyVariance[c.county]) countyVariance[c.county] = [];
-          countyVariance[c.county].push(Math.abs(c.variance_pct));
+          if (!countyVariance[c.COUNTYNAME]) countyVariance[c.COUNTYNAME] = [];
+          countyVariance[c.COUNTYNAME].push(Math.abs(c.variance_pct));
+          
+          if (!adjusterVariance[c.adjuster]) adjusterVariance[c.adjuster] = [];
+          adjusterVariance[c.adjuster].push(Math.abs(c.variance_pct));
+        });
+        
+        // Top contributing factors
+        const topCounties = Object.entries(countyVariance)
+          .map(([name, vars]) => ({ name, avgVar: vars.reduce((a, b) => a + b) / vars.length, count: vars.length }))
+          .sort((a, b) => b.avgVar - a.avgVar)
+          .slice(0, 3);
+        
+        const topAdjusters = Object.entries(adjusterVariance)
+          .map(([name, vars]) => ({ name, avgVar: vars.reduce((a, b) => a + b) / vars.length, count: vars.length }))
+          .sort((a, b) => b.avgVar - a.avgVar)
+          .slice(0, 3);
+
+        return {
+          key: combo.key,
+          injuryGroup: combo.injuryGroup,
+          severity: combo.severityBucket,
+          venueRating: combo.venueRating,
+          impact: combo.impactLife,
+          avgVariance,
+          avgSettlement,
+          avgSeverity,
+          claimCount: combo.claims.length,
+          topCounties,
+          topAdjusters,
+          factors: combo.factors
+        };
+      })
+      .sort((a, b) => b.avgVariance - a.avgVariance);
+  }, [data]);
           
           if (!adjusterVariance[c.adjuster]) adjusterVariance[c.adjuster] = [];
           adjusterVariance[c.adjuster].push(Math.abs(c.variance_pct));
@@ -206,8 +233,8 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
     }> = {};
 
     data.forEach(claim => {
-      const sevBucket = claim.severity <= 5 ? 'Low-Sev' : claim.severity <= 10 ? 'Mid-Sev' : 'High-Sev';
-      const comboKey = `${claim.injury_group}|${sevBucket}`;
+      const sevBucket = claim.SEVERITY_SCORE <= 4 ? 'Low-Sev' : claim.SEVERITY_SCORE <= 8 ? 'Mid-Sev' : 'High-Sev';
+      const comboKey = `${claim.INJURY_GROUP_CODE}|${sevBucket}`;
       
       if (!adjusterStats[claim.adjuster]) {
         adjusterStats[claim.adjuster] = {
@@ -224,8 +251,8 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
       const stats = adjusterStats[claim.adjuster];
       stats.totalClaims++;
       stats.variances.push(Math.abs(claim.variance_pct));
-      stats.settlements.push(claim.final_settlement);
-      stats.severities.push(claim.severity);
+      stats.settlements.push(claim.DOLLARAMOUNTHIGH);
+      stats.severities.push(claim.SEVERITY_SCORE);
       stats.handledCombos.add(comboKey);
       
       if (!stats.performanceByCombo[comboKey]) {
@@ -306,8 +333,8 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
     } = {};
     
     data.forEach(claim => {
-      if (!counties[claim.county]) {
-        counties[claim.county] = { 
+      if (!counties[claim.COUNTYNAME]) {
+        counties[claim.COUNTYNAME] = { 
           signedVariance: 0, 
           absVariance: 0,
           count: 0, 
@@ -321,19 +348,19 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
         };
       }
       
-      counties[claim.county].signedVariance += claim.variance_pct;
-      counties[claim.county].absVariance += Math.abs(claim.variance_pct);
-      counties[claim.county].count += 1;
-      counties[claim.county].settlement += claim.final_settlement;
-      counties[claim.county].avgSeverity += claim.severity;
-      counties[claim.county].avgCaution += claim.caution_score;
+      counties[claim.COUNTYNAME].signedVariance += claim.variance_pct;
+      counties[claim.COUNTYNAME].absVariance += Math.abs(claim.variance_pct);
+      counties[claim.COUNTYNAME].count += 1;
+      counties[claim.COUNTYNAME].settlement += claim.DOLLARAMOUNTHIGH;
+      counties[claim.COUNTYNAME].avgSeverity += claim.SEVERITY_SCORE;
+      counties[claim.COUNTYNAME].avgCaution += (claim.CAUTION_LEVEL === 'High' ? 1 : 0);
       
       if (claim.variance_pct > 0) {
-        counties[claim.county].underpredicted += 1;
-        if (claim.variance_pct > 15) counties[claim.county].liberalCount += 1;
+        counties[claim.COUNTYNAME].underpredicted += 1;
+        if (claim.variance_pct > 15) counties[claim.COUNTYNAME].liberalCount += 1;
       } else {
-        counties[claim.county].overpredicted += 1;
-        if (claim.variance_pct < -15) counties[claim.county].conservativeCount += 1;
+        counties[claim.COUNTYNAME].overpredicted += 1;
+        if (claim.variance_pct < -15) counties[claim.COUNTYNAME].conservativeCount += 1;
       }
     });
 
@@ -356,12 +383,12 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
         
         return {
           name,
-          state: data.find(d => d.county === name)?.state || '',
+          state: data.find(d => d.COUNTYNAME === name)?.VENUESTATE || '',
           avgSignedVariance,
           avgAbsVariance,
           avgSettlement: stats.settlement / stats.count,
           avgSeverity: stats.avgSeverity / stats.count,
-          avgCaution: stats.avgCaution / stats.count,
+          cautionHighPct: (stats.avgCaution / stats.count) * 100,
           count: stats.count,
           underpredictRate,
           tendency,
@@ -490,7 +517,7 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
         const weight = claim[field] as number;
         if (!weightData[weight]) weightData[weight] = { variances: [], settlements: [] };
         weightData[weight].variances.push(Math.abs(claim.variance_pct));
-        weightData[weight].settlements.push(claim.final_settlement);
+        weightData[weight].settlements.push(claim.DOLLARAMOUNTHIGH);
       });
 
       // Calculate statistics for each weight
