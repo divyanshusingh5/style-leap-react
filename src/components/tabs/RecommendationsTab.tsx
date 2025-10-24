@@ -127,12 +127,19 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
       
       if (!combos[comboKey]) {
         combos[comboKey] = {
-          injuryGroup: claim.INJURY_GROUP_CODE,
-          severity: sevBucket,
-          venueRating: claim.VENUE_RATING,
-          impact: claim.IMPACT,
           claims: [],
-          variance: []
+          variance: [],
+          key: comboKey,
+          injuryGroup: claim.INJURY_GROUP_CODE,
+          severityBucket: sevBucket,
+          venueRating: claim.VENUE_RATING,
+          impactLife: claim.IMPACT,
+          factors: {
+            injury_group: claim.INJURY_GROUP_CODE,
+            severity: sevBucket,
+            venue_rating: claim.VENUE_RATING,
+            impact_life: claim.IMPACT
+          }
         };
       }
       
@@ -169,36 +176,9 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
           .map(([name, vars]) => ({ name, avgVar: vars.reduce((a, b) => a + b) / vars.length, count: vars.length }))
           .sort((a, b) => b.avgVar - a.avgVar)
           .slice(0, 3);
-
-        return {
-          key: combo.key,
-          injuryGroup: combo.injuryGroup,
-          severity: combo.severityBucket,
-          venueRating: combo.venueRating,
-          impact: combo.impactLife,
-          avgVariance,
-          avgSettlement,
-          avgSeverity,
-          claimCount: combo.claims.length,
-          topCounties,
-          topAdjusters,
-          factors: combo.factors
-        };
-      })
-      .sort((a, b) => b.avgVariance - a.avgVariance);
-  }, [data]);
-          
-          if (!adjusterVariance[c.adjuster]) adjusterVariance[c.adjuster] = [];
-          adjusterVariance[c.adjuster].push(Math.abs(c.variance_pct));
-        });
-
-        const topCountyDriver = Object.entries(countyVariance)
-          .map(([k, v]) => ({ name: k, avg: v.reduce((a, b) => a + b) / v.length }))
-          .sort((a, b) => b.avg - a.avg)[0];
-
-        const topAdjusterDriver = Object.entries(adjusterVariance)
-          .map(([k, v]) => ({ name: k, avg: v.reduce((a, b) => a + b) / v.length, count: v.length }))
-          .sort((a, b) => b.avg - a.avg)[0];
+        
+        const topCountyDriver = topCounties[0];
+        const topAdjusterDriver = topAdjusters[0];
 
         return {
           ...combo,
@@ -206,6 +186,8 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
           avgSettlement,
           avgSeverity,
           count: combo.claims.length,
+          topCounties,
+          topAdjusters,
           topCountyDriver,
           topAdjusterDriver,
           displayName: `${combo.injuryGroup} + ${combo.severityBucket} + ${combo.venueRating}`
@@ -759,7 +741,7 @@ export function RecommendationsTab({ data }: RecommendationsTabProps) {
                         <div className="bg-muted/30 rounded p-3">
                           <div className="text-xs text-muted-foreground mb-1">Primary Geographic Driver</div>
                           <div className="font-semibold">{combo.topCountyDriver?.name}</div>
-                          <div className="text-sm text-destructive">{combo.topCountyDriver?.avg.toFixed(1)}% avg variance</div>
+                          <div className="text-sm text-destructive">{combo.topCountyDriver?.avgVar.toFixed(1)}% avg variance</div>
                         </div>
                         <div className="bg-muted/30 rounded p-3">
                           <div className="text-xs text-muted-foreground mb-1">Avg Settlement</div>
